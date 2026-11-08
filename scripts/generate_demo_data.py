@@ -72,26 +72,32 @@ def save_csv(path: Path, samples: np.ndarray, *, scenario: str, source: str,
         for i, v in enumerate(samples):w.writerow(['','',i,format(float(v),'.6f')])
 
 
-def generate(source:Path,template_dir:Path,out:Path, *, sample_rate_hz:float|None=None) -> list[dict]:
+def generate(source:Path,template_dir:Path,out:Path, *, sample_rate_hz:float|None=None,
+             sample_count:int=60000) -> list[dict]:
     out.mkdir(parents=True,exist_ok=True)
-    original=load_field(source,60000)
+    if sample_count < 20000:
+        raise ValueError('sample_count must be >= 20000 for demonstration')
+    original=load_field(source,sample_count)
     crosses=np.where((original[:-1]<=0)&(original[1:]>0))[0]+1
     if not 25 <= np.median(np.diff(crosses)) <= 120:
         raise ValueError('unexpected source periods')
     all_events=[]
-    save_csv(out/'00_正常三角波.csv',original[:12000],scenario='field_baseline_unmodified',source=source.name,sample_rate_hz=sample_rate_hz)
+    save_csv(out/'00_正常三角波.csv',original,scenario='field_baseline_unmodified',source=source.name,sample_rate_hz=sample_rate_hz)
     for typ,template_name,target_name in TEMPLATES:
-        raw=original[:12000]
+        raw=original
         result=raw.copy()
         template=np.loadtxt(template_dir/template_name,delimiter=',')
-        ev=inject(result,raw,crosses,template,6000)
-        ev.update(type=typ,file=target_name)
-        all_events.append(ev)
+        # Two separated fault episodes let the UI demonstrate detection, recovery,
+        # and a second independent alarm without needing a new playback component.
+        for target in (int(sample_count * .27), int(sample_count * .72)):
+            ev=inject(result,raw,crosses,template,target)
+            ev.update(type=typ,file=target_name)
+            all_events.append(ev)
         save_csv(out/target_name,result,scenario=typ,source=source.name,sample_rate_hz=sample_rate_hz)
     mixed=original.copy()
     for j,(typ,template_name,_) in enumerate(TEMPLATES):
         template=np.loadtxt(template_dir/template_name,delimiter=',')
-        ev=inject(mixed,original,crosses,template,int(np.linspace(9000,51000,5)[j]))
+        ev=inject(mixed,original,crosses,template,int(np.linspace(sample_count*.16,sample_count*.85,5)[j]))
         ev.update(type=typ,file='06_混合异常.csv')
         all_events.append(ev)
     save_csv(out/'06_混合异常.csv',mixed,scenario='mixed',source=source.name,sample_rate_hz=sample_rate_hz)
@@ -106,6 +112,8 @@ if __name__=='__main__':
     ap.add_argument('--templates',required=True,type=Path)
     ap.add_argument('--output',required=True,type=Path)
     ap.add_argument('--sample-rate-hz',type=float)
+    ap.add_argument('--sample-count',type=int,default=60000,help='samples per file, minimum 20000')
     a=ap.parse_args()
-    events=generate(a.source,a.templates,a.output,sample_rate_hz=a.sample_rate_hz)
+    events=generate(a.source,a.templates,a.output,sample_rate_hz=a.sample_rate_hz,
+                    sample_count=a.sample_count)
     print(f'Generated 7 CSV files and {len(events)} annotated defect segments')
