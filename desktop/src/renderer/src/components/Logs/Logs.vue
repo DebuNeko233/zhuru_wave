@@ -544,7 +544,6 @@ use([
   GridComponent
 ])
 
-import { debounce } from 'lodash-es'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useLogStore } from '@renderer/store/logStore'
 import type { LogEntry } from '@renderer/types/log'
@@ -632,13 +631,15 @@ const visibleLines = ref({
   info: true
 })
 
-const debouncedSearch = debounce((value: string) => {
-  debouncedSearchKeyword.value = value
-}, 300) // 300ms防抖
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-// 监听搜索关键词变化
+// 搜索输入防抖：使用原生定时器，无需额外依赖
 watch(searchKeyword, (newValue) => {
-  debouncedSearch(newValue)
+  if (searchDebounceTimer !== null) clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearchKeyword.value = newValue
+    searchDebounceTimer = null
+  }, 300)
 })
 
 const drillDownToLogs = (point: any) => {
@@ -1131,6 +1132,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (searchDebounceTimer !== null) clearTimeout(searchDebounceTimer)
   if (refreshTimer) {
     clearInterval(refreshTimer)
   }

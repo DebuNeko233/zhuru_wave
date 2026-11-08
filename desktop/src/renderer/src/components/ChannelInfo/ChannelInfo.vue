@@ -2,7 +2,6 @@
   <div class="channelInfo">
     <div class="channelInfo_left">
       <InteractiveWaveChart
-        ref="waveChartRef"
         :channel-id="currentChannel"
         :title="`通道 ${currentChannel} 波形图`"
         :channel-data="currentChannelData"
@@ -48,7 +47,6 @@ defineOptions({
 })
 
 const route = useRoute()
-const waveChartRef = ref()
 const channelDataStore = useChannelDataStore()
 const isLocal = ref(false)
 const currentLocalChannelData = ref()
