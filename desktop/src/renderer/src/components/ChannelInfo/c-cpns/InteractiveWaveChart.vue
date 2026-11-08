@@ -825,6 +825,18 @@ const importData = async () => {
       return
     }
 
+    // 回放时必须真正连接算法后端，否则只画波形却不报警会误导用户。
+    let detectorHealth
+    try {
+      detectorHealth = await window.electronAPI.invoke('data:detector-health')
+    } catch (error) {
+      detectorHealth = { success: false, error: String(error) }
+    }
+    if (!detectorHealth?.success) {
+      alert(`检测服务未运行或不可用，请先在 backend 目录启动 python f6.py。\n127.0.0.1:5001/health\n${detectorHealth?.error || ''}`)
+      return
+    }
+
     const stopResult = await window.electronAPI.invoke('data:stop-collection')
     if (!stopResult.success) { alert('无法停止实时采集'); return }
     let previousBatchWarn = false
@@ -884,6 +896,7 @@ const importData = async () => {
           err_data_list = []
           defectPoints = []
           console.error('离线检测服务异常', isTriangleResult.error)
+          throw new Error(`第 ${batchIndex + 1} 批检测失败：${isTriangleResult.error || '服务无响应'}`)
         }
 
         // 构造数据对象（峰值、最小、平均电压及峰峰值均使用绝对值后的数据计算）
@@ -991,7 +1004,7 @@ const importData = async () => {
 
       onError: (error: Error) => {
         console.error('CSV读取错误:', error)
-        alert('文件读取失败')
+        alert(`离线数据处理已中断：${error.message}`)
         currentStreamReader.value = null
       }
     })

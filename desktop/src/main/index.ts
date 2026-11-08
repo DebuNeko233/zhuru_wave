@@ -6,7 +6,7 @@ import workerScriptPath from './data-worker?modulePath'
 import { Worker, isMainThread } from 'worker_threads'
 import path from 'path'
 import { WaveCheckRequestOptions } from './type'
-import { apiService } from './api'
+import { apiService, getRequest } from './api'
 // import { rejects } from 'assert';
 import { flattenTubiandianList } from './utils'
 
@@ -545,6 +545,24 @@ if (isMainThread) {
     } catch (error) {
       console.error('IPC getSingleChannelData error:', error)
       throw error
+    }
+  })
+
+  // CSV 回放前检查 Python 服务，不能把连接失败伪装成正常波形。
+  ipcMain.handle('data:detector-health', async () => {
+    try {
+      const status = await getRequest<{ status?: string; service?: string }>(
+        '/health', { timeout: 2000 }
+      )
+      if (status.status === 'ok' && status.service === 'zhuru-wave-detector') {
+        return { success: true }
+      }
+      return { success: false, error: '检测服务版本不匹配' }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      }
     }
   })
 
