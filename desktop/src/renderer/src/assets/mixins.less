@@ -1,0 +1,39 @@
+.card-style() {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+// 带悬停效果的卡片样式
+.card-style-hover() {
+  .card-style();
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+  }
+}
+
+// 可自定义参数的卡片样式
+.card-style-custom(@bg: #ffffff, @border: #e0e0e0, @radius: 8px, @padding: 16px) {
+  background: @bg;
+  border: 1px solid @border;
+  border-radius: @radius;
+  padding: @padding;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}

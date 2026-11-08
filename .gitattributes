@@ -1,0 +1,8 @@
+* text=auto
+*.py text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
+*.cpp text eol=crlf
+*.h text eol=crlf
+*.sln text eol=crlf
+*.csv text eol=lf

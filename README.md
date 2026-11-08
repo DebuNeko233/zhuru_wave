@@ -1,43 +1,36 @@
-# zhuru_wave
+# zhuru_wave — 工业三角波与李萨如轨迹检测
 
-工业设备三角波监测项目资料与原始实现归档（2026-11-08）。
+该仓库整理自现有的 Windows 硬件采集、Electron/Vue 桌面监控、Flask 三角波检测服务和 Python 算法实验源码。
+**目前已实现的是单通道三角波规则检测；双通道李萨如八边形清晰度判定是下一阶段需求，尚未接入线上服务。**
 
-## 目标
+## 目录
 
-利用多通道示波采集设备获取波形，检测单通道三角波的毛刺、折点、峰谷异常和形状失真；对**同步采集的两路三角波**进行 X-Y 李萨如分析，以**轮廓清晰、内部不过度填充的八边形轨迹**作为目标特征。最终提供实时显示、异常定位、报警与日志。
+| 路径 | 内容 |
+| --- | --- |
+| `desktop/` | Electron + Vue 3 + TypeScript 桌面程序，Koffi 调用原生 DLL；保留原始项目构建脚本 |
+| `native_cpp/` | C++ `libwave` DLL 和测试工程源码（依赖第三方 SDK） |
+| `backend/` | 现场 Flask/Waitress `POST /wave_check` 检测服务 (`f6.py`) |
+| `algorithm_experiments/` | Python 算法原型及小型合成波形样本，不参与当前在线服务 |
+| `tools/` | 原始 CSV 分析工具（不转换成电压） |
+| `docs/` | 系统架构、接口、数据格式、已知问题及 SDK 集成说明 |
 
-> **当前状态**：项目尚未完成“双通道八边形联合判定”。`backend/f6.py` 是现场使用的单通道 Flask 检测后端原始版本，并非完整的新算法。仓库内分析文档不代表现场校准或测试通过。
+## 运行（Windows）
 
-## 已归档
+1. **厂商 SDK**：从你所持有的 `HT6004BX_SDK.zip` 按其许可安装对应架构的 DLL、头文件和 LIB。该仓库不再分发厂商二进制。
+2. **原生 DLL**：使用 Visual Studio 打开 `native_cpp/libwave.sln`。注意：上传的 C++ 工程与现有桌面 DLL 不是同一导出接口版本，不能直接互换。
+3. **Python**：在 `backend/` 中创建虚拟环境，执行 `pip install -r requirements.txt` 后运行 `python f6.py`。默认监听 `127.0.0.1:5001`。
+4. **Electron**：在 `desktop/` 执行 `npm ci`，然后在 Windows 上 `npm run dev`。`desktop/src/native/` 需放入适配版本的 `libwave.dll` 和其依赖 DLL，且要先确认运行时 API 导出符号。
 
-- `backend/f6.py` — 2026-11-08 上传的原始在线检测程序（保持源代码原样）。
-- `backend/requirements.txt` / `.env.example` — 运行环境基础说明。
-- `docs/architecture.md` — Electron / C++ / Python 数据流与组件关系。
-- `docs/algorithm.md` — 现有在线判据、局限与拟扩展方向。
-- `docs/data-and-labels.md` — CSV 原始码值格式、现场图像标注及同步数据要求。
-- `docs/hardware-sdk.md` — HT6004BX SDK、关键 API 和源程序兼容性注意事项。
-- `docs/known-issues.md` — 已发现的待核实问题与后续工作。
+系统组件依赖实际采集硬件。缺失 DLL 或设备时不能完成实时采集测试。原 `package.json`、UI 和现有算法保留，整理过程不应被理解为修复了所有已知逻辑问题。
 
-## 本地启动 Python 服务
+## 检测判据（当前实现）
 
-建议 Python 3.12 环境：
+`f6.py`：过零点分周期、移动平均、一阶差分和差分差、MAD 阈值、尖峰合并。每周期检测到 1–2 个突变点计入通过率；还要求三角波外形票数占比至少 55%。参见 `docs/algorithm.md`。
 
-```powershell
-cd backend
-py -3.12 -m venv .venv
-.venv\Scripts\activate
-python -m pip install -r requirements.txt
-python f6.py
-```
+现场约束：正常单通道信号为干净的三角波；双通道同步采样形成的 XY 李萨如图应有清晰的八边形轨迹。**没有同步时间索引的两个 CSV 不能直接用于可靠的 XY 判定。**
 
-默认监听 `http://127.0.0.1:5001`，提供 `POST /wave_check`。运行前建议配置 `SAVE_PATH` 所在磁盘；原脚本实际从请求参数读取 `save_path`，默认值为 `C:/picture`。Windows 上如果使用进程池，请按实际 CPU 核数和可用内存评估。
+## 原始数据与公开发布
 
-## 数据与发布约束
+现场 CSV 的 `Value` 是采集/导出程序提供的原始数值，**不能当成 V**。原始现场 CSV、设备照片和数百 MB 的实验 `analyze/csv` 数据不随源码公开提交；请保存在本地 `field_data/`，需要做公开发布前自行确认权限和脱敏。
 
-现场 CSV 数值是采集设备导出的**原始幅值**，不能当作实际电压。两份独立导出的单通道 CSV 不等于已同步的 XY 双通道数据；不能仅据它们的散点云认定李萨如失真。原始百万级 CSV、设备现场照片、厂家闭源 DLL、安装包与编译输出不默认纳入公开仓库。SDK 安装和拷贝由设备授权与原供应商许可决定。
-
-目前不宣称支持现场部署、自动识别准确率或李萨如八边形检测通过率。
-
-## 推荐阅读
-
-先看 [架构](docs/architecture.md)、[数据与标注](docs/data-and-labels.md)、[算法](docs/algorithm.md)、[硬件 SDK](docs/hardware-sdk.md) 和 [问题清单](docs/known-issues.md)。
+厂商 SDK、FFTW/第三方二进制及文档需按各自许可取得，详见 `docs/vendor-sdk.md`。本整理项目未额外声明对上传第三方代码或资料的所有权。

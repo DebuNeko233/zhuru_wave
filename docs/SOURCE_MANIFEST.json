@@ -1,0 +1,786 @@
+{
+  "files": [
+    {
+      "path": ".gitattributes",
+      "size_bytes": 140,
+      "sha256": "414e497098c0d0816ff37d41e0377fb205d19661eb08d8501f62adb45e2c2efa"
+    },
+    {
+      "path": ".gitignore",
+      "size_bytes": 534,
+      "sha256": "f93dce70bb775b0194802ca3a052ded7f7c260eeec6cbdd85b65781e07082763"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2868,
+      "sha256": "3971eff848e244e2d5bb33c8b24144fa33abc46aa39af18bab0270bd92549be6"
+    },
+    {
+      "path": "algorithm_experiments/analyze/prepare.py",
+      "size_bytes": 998,
+      "sha256": "2c5f9c9757492af96c1191271c1b9a84e459d225271f808774f25026a7d69b58"
+    },
+    {
+      "path": "algorithm_experiments/analyze/wave_analyze.py",
+      "size_bytes": 1786,
+      "sha256": "f0792bec4c1cd35e9087a1cd1137ce01dd40a6662ecc82a903ab37d2ad7aca0c"
+    },
+    {
+      "path": "algorithm_experiments/find_half_period.py",
+      "size_bytes": 7905,
+      "sha256": "307dc81fc276344c3d42c031fb2fd0a40bec0b43642a211bfd68105230eeae21"
+    },
+    {
+      "path": "algorithm_experiments/main.py",
+      "size_bytes": 2052,
+      "sha256": "400cef734e846b05798666acf295aa28d03930cfcab91c362bd7701bd18c640d"
+    },
+    {
+      "path": "algorithm_experiments/main1.py",
+      "size_bytes": 812,
+      "sha256": "b6daef4a9b1850edf379681a57516a066c8af266e6a0504375e7ac1bb66d01f6"
+    },
+    {
+      "path": "algorithm_experiments/moni/round.py",
+      "size_bytes": 1172,
+      "sha256": "5b2580c640dd8c274d06e08067441b1005676d313f5e27d7e1952245cbda00a0"
+    },
+    {
+      "path": "algorithm_experiments/moni/yuan.py",
+      "size_bytes": 784,
+      "sha256": "e9276bacd529c5af4dc9522a2a8993e18fccf2f7c7f366a81474bf66962d5ba0"
+    },
+    {
+      "path": "algorithm_experiments/osc.py",
+      "size_bytes": 666,
+      "sha256": "b703ad35fe77538bd151f0b5166ae0615498232de786249fac312874e3725843"
+    },
+    {
+      "path": "algorithm_experiments/param.py",
+      "size_bytes": 7976,
+      "sha256": "f115353a84a69f8d8494e6f41c3c2ab77a3eea6b0a2ecbd454d09686be639630"
+    },
+    {
+      "path": "algorithm_experiments/param2.py",
+      "size_bytes": 2424,
+      "sha256": "f7f2d661cfc27859b312508ecf9ff5edee7f6eb39a74cb5a00720f1e514d5449"
+    },
+    {
+      "path": "algorithm_experiments/pyproject.toml",
+      "size_bytes": 500,
+      "sha256": "4241160121ab918d97d5bcbe1571ca66aab37f43fd504efdada544d0cdb70958"
+    },
+    {
+      "path": "algorithm_experiments/rule.txt",
+      "size_bytes": 938,
+      "sha256": "7dd45e9665ee4e79a99bb675034be6849c9bfba25c8b982ef60e03ce3b3cd310"
+    },
+    {
+      "path": "algorithm_experiments/ta.py",
+      "size_bytes": 7604,
+      "sha256": "d86052646c75009cea2f2bc0189b9f3ead6dc48318a5db4ec11e23141a3b3cd4"
+    },
+    {
+      "path": "algorithm_experiments/test_data/削波三角波.csv",
+      "size_bytes": 601,
+      "sha256": "a7830a499ebab3b7517133b31fe8b82fd064d66d1447d360b55637b5e8a393c8"
+    },
+    {
+      "path": "algorithm_experiments/test_data/圆顶三角波.csv",
+      "size_bytes": 1690,
+      "sha256": "a1d7632b687055808fadf0c47d690bb84347aa291892167f4bbdc282bcc28a1b"
+    },
+    {
+      "path": "algorithm_experiments/test_data/标准三角波.csv",
+      "size_bytes": 1773,
+      "sha256": "f720aa7d9d27d33e6e541947b773e06741183b6af8c5cfcc4d5180afd75e0c90"
+    },
+    {
+      "path": "algorithm_experiments/test_data/毛刺三角波.csv",
+      "size_bytes": 1697,
+      "sha256": "1e86e3a66835a764a2140b42c23ab54151fcb4297a4d5e7f23fecaf3d187193d"
+    },
+    {
+      "path": "algorithm_experiments/test_data/零点台阶三角波.csv",
+      "size_bytes": 1584,
+      "sha256": "4bd91ffcb499b65cc92f90312b8e407bd025423a96dc51c1f29212334f0dbe6f"
+    },
+    {
+      "path": "algorithm_experiments/test_data/顶峰突降三角波.csv",
+      "size_bytes": 1727,
+      "sha256": "cbfcef7599ada3883bce990cb58cb7a3c26da7de8d6036be254a4b8587288790"
+    },
+    {
+      "path": "algorithm_experiments/test_data/顶峰突降三角波1.csv",
+      "size_bytes": 1727,
+      "sha256": "cbfcef7599ada3883bce990cb58cb7a3c26da7de8d6036be254a4b8587288790"
+    },
+    {
+      "path": "algorithm_experiments/triangle.py",
+      "size_bytes": 6228,
+      "sha256": "e92074e36a3dcb8abeb19cba7d43efaee35f572884a1bb8747cbc307bbc33365"
+    },
+    {
+      "path": "algorithm_experiments/triangle98.py",
+      "size_bytes": 4982,
+      "sha256": "717dc350f667c27b422ac7e4e6e4a239beb59f5c4e0c1860b6bc1d178c5713a5"
+    },
+    {
+      "path": "algorithm_experiments/triangle_display.py",
+      "size_bytes": 234,
+      "sha256": "327708d187ba5f3999f5590282534ba481d018811075ac8906b76cf614e57682"
+    },
+    {
+      "path": "algorithm_experiments/triangle_new.py",
+      "size_bytes": 5197,
+      "sha256": "fb298a394d4dd095fe23c6e6ea88defb910f6100c263856a028b8785c12cccab"
+    },
+    {
+      "path": "algorithm_experiments/uv.lock",
+      "size_bytes": 125184,
+      "sha256": "c0a7d7440834267be8bee2983d8697d42f0781f99c1fc3dcb38acf12372cfe56"
+    },
+    {
+      "path": "backend/.env.example",
+      "size_bytes": 66,
+      "sha256": "044c116cf0e4246faf5b77cb7caf57a3b69156f1e0879e6b37677834bfe34fb2"
+    },
+    {
+      "path": "backend/README.md",
+      "size_bytes": 965,
+      "sha256": "38758d5feafff9f7b6ab0c48751eb029cc3d0672fffd33277a4945f76316ea84"
+    },
+    {
+      "path": "backend/f6.py",
+      "size_bytes": 25472,
+      "sha256": "a4ce5d78ed697a230b70c7c40cac224c0439beef5cbfdfbf2bf3eec01afcdda3"
+    },
+    {
+      "path": "backend/requirements.txt",
+      "size_bytes": 87,
+      "sha256": "7d30ba342e8d90f6f3f1b35957c8b3786cd8b125a6a3b8cb66cb82c6171f6d0d"
+    },
+    {
+      "path": "desktop/.cursor/debug-6fdb0c.log",
+      "size_bytes": 213,
+      "sha256": "d5236b2d5b77acb21d3d2c6a6c482b98ac2a1d47f61730bf2e4de2816328e8bc"
+    },
+    {
+      "path": "desktop/.editorconfig",
+      "size_bytes": 154,
+      "sha256": "b60ccb335cb17dbe5fe7ac3b1fc57cae2915118288a835f7b9cd82a19ef2a12d"
+    },
+    {
+      "path": "desktop/.gitignore",
+      "size_bytes": 52,
+      "sha256": "9b0bab6230a75de283e2d026f84455e5be968211280ce1cd69f8a5268167fe14"
+    },
+    {
+      "path": "desktop/.npmrc",
+      "size_bytes": 146,
+      "sha256": "c8ff4e4d1b4eab9bb941bbec0a1fbe29b76a24bdcc70a4e5e4e82ba6f4a46824"
+    },
+    {
+      "path": "desktop/.prettierignore",
+      "size_bytes": 65,
+      "sha256": "c94cdfa8e330fb03c131dffbd3edf6b52239541c0749295725611a9dc941d552"
+    },
+    {
+      "path": "desktop/.prettierrc.yaml",
+      "size_bytes": 66,
+      "sha256": "911aee00255ccce2af63aab90db20fe23af79fc7b44e7332d187fc295a2b4383"
+    },
+    {
+      "path": "desktop/.vscode/extensions.json",
+      "size_bytes": 52,
+      "sha256": "94f78f9e4f85e8f3d6eeaa206d68e39a3d717d19977eaa2d77af998b1f00657c"
+    },
+    {
+      "path": "desktop/.vscode/launch.json",
+      "size_bytes": 915,
+      "sha256": "ec1a2437833dc8f77144109a9865ac3f9b58f1eed2f37aeca539f81157ed8cc6"
+    },
+    {
+      "path": "desktop/.vscode/settings.json",
+      "size_bytes": 240,
+      "sha256": "beb72282b040f820a953d08b52f6d671a6456cc0447de91d1eac5aa2d1186c68"
+    },
+    {
+      "path": "desktop/README.md",
+      "size_bytes": 603,
+      "sha256": "40e639aaaead1b4cf43c78dea66c771f99bbfa2f3053ef3bccb55585bdd7e082"
+    },
+    {
+      "path": "desktop/electron-builder.yml",
+      "size_bytes": 1566,
+      "sha256": "f9d6717cb93127a57a6d3776c71064b0ec523e5286b69a2c75b6555424d8e3c2"
+    },
+    {
+      "path": "desktop/electron.vite.config.ts",
+      "size_bytes": 1055,
+      "sha256": "b07d6e461ca639578bb57590f412a8cc98f20891a54041433d4ad4c373dcd080"
+    },
+    {
+      "path": "desktop/eslint.config.mjs",
+      "size_bytes": 943,
+      "sha256": "5745f5ed6481348ce5f3c6804da96f49b2662fe029d35edf996bbd7e7b47ca65"
+    },
+    {
+      "path": "desktop/package-lock.json",
+      "size_bytes": 335635,
+      "sha256": "d730dbee51121210483e2c6cac2dd55ed21d9794606aaa363606172abd956ca9"
+    },
+    {
+      "path": "desktop/package.json",
+      "size_bytes": 1997,
+      "sha256": "8a7b79acd0944e9656402ea53392a82c1bd37d73efd653c833560e09ca2761b6"
+    },
+    {
+      "path": "desktop/resources/icon.png",
+      "size_bytes": 35949,
+      "sha256": "4363016ccf3541c84ae6a1eee83f507fb2b775aa89b9d6c8163875640267f9e9"
+    },
+    {
+      "path": "desktop/resources/img.ico",
+      "size_bytes": 55835,
+      "sha256": "d72f39bee4129b6ad91e098fb9f7797315f67e6de16cc1d6a3839ac594817eec"
+    },
+    {
+      "path": "desktop/src/main/api.ts",
+      "size_bytes": 1772,
+      "sha256": "8a62b70edc469b07925a09b15599ce833d928bfb336a55b58999794ccb4cba59"
+    },
+    {
+      "path": "desktop/src/main/data-provider.ts",
+      "size_bytes": 9472,
+      "sha256": "9b2f7d0bb760c6585bcadc9b5b63a1b4aaa44fd1be998497d847a56f42b934a2"
+    },
+    {
+      "path": "desktop/src/main/data-worker.ts",
+      "size_bytes": 29171,
+      "sha256": "ebda187194f531a25c4b9efcfe99bcef9322c1c1bc6dd2c6620b0549842d7a74"
+    },
+    {
+      "path": "desktop/src/main/index.ts",
+      "size_bytes": 63286,
+      "sha256": "2d380b3aa4e1ea1a4cc93a3a511d428dcb010dc3c7cfcaeedd405627f6555f15"
+    },
+    {
+      "path": "desktop/src/main/type.ts",
+      "size_bytes": 3409,
+      "sha256": "a454bf35bacf918128fa1dcc41a49822cb146f2367bd0609cd74b17f56d4872c"
+    },
+    {
+      "path": "desktop/src/main/utils.ts",
+      "size_bytes": 446,
+      "sha256": "22ab83303f11d602130b31f8e710fd477379c7b29e1ec062509e4f74ea568274"
+    },
+    {
+      "path": "desktop/src/native/wave.h",
+      "size_bytes": 3224,
+      "sha256": "987090b80ccd56167d7c7382d49e3420abe9ab463717df8b67521a87c8831228"
+    },
+    {
+      "path": "desktop/src/preload/index.d.ts",
+      "size_bytes": 361,
+      "sha256": "97321a76bc0f7a9380caee6fa6a97e60985584ff254aa0ce45a111c86425ca3b"
+    },
+    {
+      "path": "desktop/src/preload/index.ts",
+      "size_bytes": 2388,
+      "sha256": "12988ace8e215e8f0806f63f7e21795ed59e00090a4a8e7d87594f957ecb4d55"
+    },
+    {
+      "path": "desktop/src/renderer/auto-imports.d.ts",
+      "size_bytes": 259,
+      "sha256": "e274ab609b1f953a0919108d076e6a189024597b67fe3683743c7b59769085ec"
+    },
+    {
+      "path": "desktop/src/renderer/components.d.ts",
+      "size_bytes": 4910,
+      "sha256": "c940b4a3704be85310955590c34a78c58478fba66b1ebe6ffcc1156e57e0be0b"
+    },
+    {
+      "path": "desktop/src/renderer/index.html",
+      "size_bytes": 478,
+      "sha256": "7458abf917024ee0b9027865e9bb0cff3923b071281e1eca23d5376b6cf7c060"
+    },
+    {
+      "path": "desktop/src/renderer/src/App.vue",
+      "size_bytes": 3281,
+      "sha256": "3bcf586397744749b8861a23ee2631f591f900aaf26229ce0a29c32c0395c9bd"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/base.css",
+      "size_bytes": 1604,
+      "sha256": "b50c2da57a4fddb48925dbd7a48301dc10bd4701df269dc16ca7c34f3d27b0a4"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/electron.svg",
+      "size_bytes": 5822,
+      "sha256": "fb4e2a0e6a6d214b410cf320d725796a5dca53eacdcef031da125e10ede5f91b"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/AlarmIcon.vue",
+      "size_bytes": 1811,
+      "sha256": "865b36ed8603c5cb2503649901216c404662427cbc618eb831a17b70b1c0563f"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/DataCollection.vue",
+      "size_bytes": 3110,
+      "sha256": "8e23d3aeb3680ec3c08765e52e266410cfaa4438e93914f1b6aa4b15853221c3"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/FrequencyIcon.vue",
+      "size_bytes": 3030,
+      "sha256": "743de8f87c54c9bb1505ccfdb577cf7130755a57944be961a4ba9f142f2a4a7c"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/OverloadIcon.vue",
+      "size_bytes": 1274,
+      "sha256": "77b0fc38ad69ecde040725c1267505b848bf09c7e5845ad375035c0b0ba61fa3"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/RecordIcon.vue",
+      "size_bytes": 2682,
+      "sha256": "453696fac9459613d442df660d764765a656a4770e454be9b2a44c94e972576b"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/RuntimeIcon.vue",
+      "size_bytes": 2000,
+      "sha256": "5d4c23d9db75f0b22301dc62e21380b0c205c405ebdca2aac1db17d3b1855d94"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/iconComponents/WarningIcon.vue",
+      "size_bytes": 2501,
+      "sha256": "dcb278565a6e9b3feca7c90b5bbf192bfad1228f22e0f90829390cf1d0289b3a"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/OIP.webp",
+      "size_bytes": 4164,
+      "sha256": "89d0e4eff7357624abc7ef679db31814fa42bdeb2c6adc02466a947219ef44fc"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar.jpeg",
+      "size_bytes": 207172,
+      "sha256": "f4c0ae4bfdbf984ff4b01a2f9beb873d6d27fdb582a7049f6caeff5436061c0d"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar1.jpeg",
+      "size_bytes": 134524,
+      "sha256": "f6aa94b66737b2e5094002ed7231765df5978dbbe3a4df30b30513388ba05cec"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar2.jpg",
+      "size_bytes": 49676,
+      "sha256": "9ce924087f3d621de420750eed7559fad193afae89cc0a242ad1c1dafa769db9"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar4.webp",
+      "size_bytes": 29308,
+      "sha256": "53e92c5bdf897c569824d2f2dc5ea86f75cad9af2b956811d0ea4c3d61c5ab8e"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar5.webp",
+      "size_bytes": 98488,
+      "sha256": "eec9dfdb96d93eb6a8a81d410917f4f0abcd27c43dd37620ebedf69d345e6071"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/avatar6.jpeg",
+      "size_bytes": 228058,
+      "sha256": "15248e995ff4e4497b9be254ea8d76783b0904bc331b6f02dd2714a40dd8f022"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/loading.gif",
+      "size_bytes": 275639,
+      "sha256": "e6d336e71a1f1836d68a3742a29be6e1ff1eb4847baa7da1c0ef52350e62ab24"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/loading1.gif",
+      "size_bytes": 213762,
+      "sha256": "8a20d53cb8a06ca2593b306897c48c613a31daa6d65c5c84a854b8a90dbe859d"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/img/rabbit.jpg",
+      "size_bytes": 43232,
+      "sha256": "68b4df9f2be62574a54be92985701d2a0d72c2bb8cfdd4ee34f58fa41d4f424d"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/main.css",
+      "size_bytes": 3133,
+      "sha256": "f8691081c313e3f1aec1a4d1743daa1551a17f0365c97a715ab7ee1ebf730350"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/mixins.less",
+      "size_bytes": 902,
+      "sha256": "788752d03e53b0bb168e2e0f8b4d7a1be2363116d58f552d0fa48ad3b6b4f891"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/variables.less",
+      "size_bytes": 1540,
+      "sha256": "79f6f4d3a7023feaf16cce9f2a53004697200cac132df0eda7866be35493213d"
+    },
+    {
+      "path": "desktop/src/renderer/src/assets/wavy-lines.svg",
+      "size_bytes": 1782,
+      "sha256": "0e62c37fa5f5ba85499762705080ead1f9af3954439ece59661c3d389d826cb2"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/AlarmNotification/AlarmNotification.vue",
+      "size_bytes": 11005,
+      "sha256": "66724835c1a4e2943cfebf37ff4d99216488c3b3e43671e0677b1a85b7991604"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/AlarmNotification/useAlarmNotification.ts",
+      "size_bytes": 2176,
+      "sha256": "48a0dbc3410c706d45e082e015add9fd66c764cc1298bfb4ccfe72935b0b8629"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/ChannelInfo/ChannelInfo.vue",
+      "size_bytes": 5202,
+      "sha256": "18d5ebd077081139ac87262b26313ffa089b005e8ade5f5d26c001f8175a69e2"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/ChannelInfo/c-cpns/AlarmAnalysisList.vue",
+      "size_bytes": 25582,
+      "sha256": "40389193291c211801d939733b5add3036406b7b3a81fcec794ca6cf1199834c"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/ChannelInfo/c-cpns/DefectImageDisplay.vue",
+      "size_bytes": 12043,
+      "sha256": "42622fb2e31427cd3ee183eea02384f6e7420985cdc9581ce7e3ec58b9fa61d9"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/ChannelInfo/c-cpns/FullDesc.vue",
+      "size_bytes": 4304,
+      "sha256": "e7210df87bee8cf92c774a99188963aed21966e91e16289aabbd68806a504ac9"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/ChannelInfo/c-cpns/InteractiveWaveChart.vue",
+      "size_bytes": 54401,
+      "sha256": "a7a672748d8e5f1ab206b51c18bb335b64b93b33639a579aefce1146fd89ec5e"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/LoadingOverlay/LoadingOverlay.vue",
+      "size_bytes": 3341,
+      "sha256": "6894e235843ea5aae856331bacbb553d16e33c8d5e251e3bd53fbe2d02792613"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/Login/Login.vue",
+      "size_bytes": 4230,
+      "sha256": "f1d9c910163181703087019d981dd3c682a25343a9523da390194dcd17e2255c"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/Logs/Logs.vue",
+      "size_bytes": 53330,
+      "sha256": "b0bbe751da951cbd8cdef8ae2429c059146fe5f976f7ddf62a83e172fb6b04c3"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainTitle/MainTitle.vue",
+      "size_bytes": 3859,
+      "sha256": "54458a62b4cd53884802565828548c14148c72c44ba9ed80fd014cfe9329687c"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/MainWindow.vue",
+      "size_bytes": 2364,
+      "sha256": "fd6b41cecb48fd147c53b90421d511035e9c08188f83a808693241c496eb02d8"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/c-cpns/DualInfoCard.vue",
+      "size_bytes": 3797,
+      "sha256": "ba503748c19c769d42da6b95947f6a7db6405648459ac3595603b1255e5dbfb2"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/c-cpns/EnergyLevelConfigDialog.vue",
+      "size_bytes": 9787,
+      "sha256": "d588904ce83e49ad3725c1eae2b8a64d2a8d378777b07bdf198be3d3eb945de2"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/c-cpns/EnergyLevelControl.vue",
+      "size_bytes": 8888,
+      "sha256": "98048e051674c6b69eebcc9537663cd4c89157061c164f03ab40da2a11705e3b"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/c-cpns/InfoCard.vue",
+      "size_bytes": 2708,
+      "sha256": "0fd63c1dd7e8e2d6f47e1f063e58bb95de6665384407ca32b8c8a882b887b787"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/MainWindow/c-cpns/MainWIndowChannelInfo.vue",
+      "size_bytes": 5996,
+      "sha256": "119cc663290a278945bb734d69a8051e116a0e7f0916a63ba792d3c7288edad1"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/NavBar/NavBar.vue",
+      "size_bytes": 2324,
+      "sha256": "609352965b5758176ef2bb65046c5e45e489517eea0cc213d2bd292a2fe4aba8"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/OscilloscopeChart/OscilloscopeChart.vue",
+      "size_bytes": 19482,
+      "sha256": "19ffd7dfab8c65891e13f09bad23ffcfaa397942c8db7b9ef7662c0604af0189"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/Profile/Profile.vue",
+      "size_bytes": 6681,
+      "sha256": "a0468c0d9fcf2f982e1582aaa5375b9837af83293d71acac3b72804695180036"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/RecordPage/RecordPage.vue",
+      "size_bytes": 18237,
+      "sha256": "60df308a5340f8ca67361319a8e64af998ab3b36e9f2887120d7dc2e3faf2352"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/SettingPage/SettingPage.vue",
+      "size_bytes": 17259,
+      "sha256": "cd112bc0603095a30017906b3c835fa9c2676114f2a4f9a68f9e7e4c28ef8ad4"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/SettingPage/c-cpns/AccountSetting.vue",
+      "size_bytes": 39207,
+      "sha256": "2bea4fcb62eeda67a30a23271ae5b4a2ae9082ad6fea453b32dc1665ccf4c3d3"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/SettingPage/c-cpns/AppearanceSetting.vue",
+      "size_bytes": 16149,
+      "sha256": "ea485bc5fa16268a470f08e63ba9ceade5f668c24559217378f4ed8b81be6246"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/SettingPage/c-cpns/ParamentSetting.vue",
+      "size_bytes": 16978,
+      "sha256": "2f0009acb41f7b58c513fb6168ff2cf046875aba83f1357f93dfb11c669a09ae"
+    },
+    {
+      "path": "desktop/src/renderer/src/components/SettingPage/c-cpns/ProgramingParament.vue",
+      "size_bytes": 19613,
+      "sha256": "1933900ab30bcdfe68542897a448d7ebd33312747ce3c64052140c9fd37f00df"
+    },
+    {
+      "path": "desktop/src/renderer/src/composables/useDataProvider.ts",
+      "size_bytes": 1434,
+      "sha256": "846ab9107122b5f65ea34694973dceab02b14d769158f0de8513bbcbba7d9f2f"
+    },
+    {
+      "path": "desktop/src/renderer/src/env.d.ts",
+      "size_bytes": 38,
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+    },
+    {
+      "path": "desktop/src/renderer/src/main.ts",
+      "size_bytes": 403,
+      "sha256": "0f14e677323b1715ce6696d6f23a44d8a0d38f665332146ee01298e0092cf8db"
+    },
+    {
+      "path": "desktop/src/renderer/src/mock/mockData.ts",
+      "size_bytes": 7466,
+      "sha256": "4b3280c0e1f167cb63bd665a4939518db85d9e9e8ff436223f7a0a12ba000472"
+    },
+    {
+      "path": "desktop/src/renderer/src/mock/useMockData.ts",
+      "size_bytes": 1784,
+      "sha256": "566d5d3661f0fc2256d198cf8829ae51c67617999de324ae2f484f0e3a4d8bac"
+    },
+    {
+      "path": "desktop/src/renderer/src/router/index.ts",
+      "size_bytes": 2918,
+      "sha256": "b6bcec4eb3a781db3878d739ee285a34bc8fb3d3202d1d7d4b84d1039d280e9f"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/alarmDataStore.ts",
+      "size_bytes": 9810,
+      "sha256": "0afd345e806d3b951a04a2626046e6feeef17cb05f4d250a84fe90610c5f235a"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/channelDataStore.ts",
+      "size_bytes": 53618,
+      "sha256": "ac467bc59851e83047ec985c01be1f577e9515c510f82c588a27859027421729"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/index.ts",
+      "size_bytes": 87,
+      "sha256": "4b1240080b9aefb772c9110ffe90f0df4303810df066b93204fb4896c75d61f8"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/logStore.ts",
+      "size_bytes": 13609,
+      "sha256": "02cb6fec11b53f87482b04b27b2fad506c858cbf852941c4d36f26faa5ea1745"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/paramentSetting.ts",
+      "size_bytes": 11855,
+      "sha256": "245a45453c5b4adab7685ef4ea47eea32a9c602d131a40601f842d4ca1ae4ddd"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/theme.ts",
+      "size_bytes": 3611,
+      "sha256": "600b9b479592bdd960e4b88a9de93571acfda1c68ca58b2d4f02e396f7894607"
+    },
+    {
+      "path": "desktop/src/renderer/src/store/user.ts",
+      "size_bytes": 5074,
+      "sha256": "c70f4276f9b1b00ad6d59aa21e281f22a9afb6e8033d3bb100f34c910afdea4c"
+    },
+    {
+      "path": "desktop/src/renderer/src/types/alarmData.ts",
+      "size_bytes": 1513,
+      "sha256": "7522e3947d106f1d90206328d9e65f6f2e26a98ad87576dad7985ec476923966"
+    },
+    {
+      "path": "desktop/src/renderer/src/types/data.ts",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "desktop/src/renderer/src/types/log.ts",
+      "size_bytes": 174,
+      "sha256": "47e97dfc1644115b20b5b32ff309c492d25c11eee9be76ede5a4ac0283e80ffb"
+    },
+    {
+      "path": "desktop/src/renderer/src/utils/common.ts",
+      "size_bytes": 556,
+      "sha256": "a113262c415927226e699800f4b8457fda073b8245957852256f2893b1d842e7"
+    },
+    {
+      "path": "desktop/src/renderer/src/utils/responsive.ts",
+      "size_bytes": 3571,
+      "sha256": "01b43b878a1793bad331f299555bf95e9a54190da91b0a163b490e7aad964077"
+    },
+    {
+      "path": "desktop/src/renderer/src/worker/dataWorker.ts",
+      "size_bytes": 6707,
+      "sha256": "f5fbb0485ee55871a91e1cd3dc8aa7763d0df8588e08f9ca3983299d0beb3ca7"
+    },
+    {
+      "path": "desktop/tsconfig.json",
+      "size_bytes": 107,
+      "sha256": "3983835feac8cd22927398f66367953cbe99d53ef5a27a33fe35267f62560a8c"
+    },
+    {
+      "path": "desktop/tsconfig.node.json",
+      "size_bytes": 265,
+      "sha256": "19bc09317749652a1997e25c5cf54f002a65712fa5e9dce8db0425d054a0ea7f"
+    },
+    {
+      "path": "desktop/tsconfig.web.json",
+      "size_bytes": 485,
+      "sha256": "c364bfd738843a5e9beb5b9c8c612572175e1c66e6405af02ddc04c3df926236"
+    },
+    {
+      "path": "docs/algorithm.md",
+      "size_bytes": 1248,
+      "sha256": "4432aad65d89b7caa2de1ecd253627bbcb38e3347056b34ff452a386b584afd3"
+    },
+    {
+      "path": "docs/architecture.md",
+      "size_bytes": 990,
+      "sha256": "944ed68c94c9fb72461bc08345cd63aa274f97e759b36c34828f739113597f81"
+    },
+    {
+      "path": "docs/data.md",
+      "size_bytes": 892,
+      "sha256": "0decdc1eabbfbc9db8bd2ca5d0a6b06d2f082ca9d0393509fad4d8e70e3a9386"
+    },
+    {
+      "path": "docs/known-issues.md",
+      "size_bytes": 1110,
+      "sha256": "04b81e232879bf36ddf812fb7b9f40b30946019efdf35373fa3e5a9f88a7bff8"
+    },
+    {
+      "path": "docs/next-steps.md",
+      "size_bytes": 713,
+      "sha256": "4e628c8007b216476c3ed9b3546e283ed09f1c52211d60a11287c8b942c95f0d"
+    },
+    {
+      "path": "docs/vendor-sdk.md",
+      "size_bytes": 752,
+      "sha256": "9a45f59e2c3158c1c0309e474765faa6cfcc2e525710a069250913b3bbee591d"
+    },
+    {
+      "path": "native_cpp/libwave/dllmain.cpp",
+      "size_bytes": 444,
+      "sha256": "7a0a819fc2ffb45ed95ea75c0311f14c39b1f5175643c3478adf6e736a572eb2"
+    },
+    {
+      "path": "native_cpp/libwave/framework.h",
+      "size_bytes": 174,
+      "sha256": "7bf0eb439f5263af3eb9cedf3edb696db7b424e237bad3ed5c5a1c12cac3846d"
+    },
+    {
+      "path": "native_cpp/libwave/libwave.vcxproj",
+      "size_bytes": 9363,
+      "sha256": "3649f3b02a6ce9c7645f6f64c51cada3892062e9a83053f1e3528e2997e3c91c"
+    },
+    {
+      "path": "native_cpp/libwave/libwave.vcxproj.filters",
+      "size_bytes": 1526,
+      "sha256": "28074f576b43684b2270094d9a4467cc376d9862f9fe33935e9e2b665d5d3240"
+    },
+    {
+      "path": "native_cpp/libwave/pch.cpp",
+      "size_bytes": 155,
+      "sha256": "4ce991752a19f5883ccbc066e18250811a3f23ea75829c2472933cd26151153c"
+    },
+    {
+      "path": "native_cpp/libwave/pch.h",
+      "size_bytes": 639,
+      "sha256": "cfab5a167fb9ede081d573ea7516736dd7868a5c8935d9861dd6624dc591df7f"
+    },
+    {
+      "path": "native_cpp/libwave/triangle.cpp",
+      "size_bytes": 13673,
+      "sha256": "cde7f905b9d0c1173f22ed5afb07e2b5699b80f06fae7757219178933fd07aac"
+    },
+    {
+      "path": "native_cpp/libwave/triangle.hpp",
+      "size_bytes": 6216,
+      "sha256": "fc5f9aaaf98a7aa18ebd785ce94cb9ee1ffef4b063cab824c1f4caa05ccce1e4"
+    },
+    {
+      "path": "native_cpp/libwave/wave.cpp",
+      "size_bytes": 10848,
+      "sha256": "81d235ab49225643c96f7de0602c05e8e0c5f28d92d2e4b94a9d775037e1f0e3"
+    },
+    {
+      "path": "native_cpp/libwave/wave.h",
+      "size_bytes": 1903,
+      "sha256": "a6e11ead27971a602fa705bafb2fe81e1832007e5012508a63ef74b531d952e3"
+    },
+    {
+      "path": "native_cpp/libwave.sln",
+      "size_bytes": 2205,
+      "sha256": "26810a21cd275ad837cf1e417fb4d3400f0922918cc58cf83dbc9dc7e5613df0"
+    },
+    {
+      "path": "native_cpp/libwave_test/TriangleDetector.cpp",
+      "size_bytes": 3309,
+      "sha256": "83ce5fab19042de504de0dbf0f70deedb81ada767d0b36f9d29e68889848b3d6"
+    },
+    {
+      "path": "native_cpp/libwave_test/TriangleDetector.h",
+      "size_bytes": 313,
+      "sha256": "5574c9ccbe966aca275f7b7fb414cf2e910e79447c671581e71a0167a1fe5ec4"
+    },
+    {
+      "path": "native_cpp/libwave_test/libwave_test.cpp",
+      "size_bytes": 3733,
+      "sha256": "49a06fa42f849f64324e95a671ad89d3e30a5aa0b678b10dce9b5daae6921fd3"
+    },
+    {
+      "path": "native_cpp/libwave_test/libwave_test.vcxproj",
+      "size_bytes": 6982,
+      "sha256": "7675288a9b7b37d05f57b3ad6bebed3dfd6b5f8a94b59e4f5af72f9607be09db"
+    },
+    {
+      "path": "native_cpp/libwave_test/libwave_test.vcxproj.filters",
+      "size_bytes": 971,
+      "sha256": "7c71cbf1e2e10fa9628a67ea7e3581dda6eb0271315db13f823cdd2d2f6bb5eb"
+    },
+    {
+      "path": "tools/inspect_drc_csv.py",
+      "size_bytes": 1062,
+      "sha256": "c0d7a3e634eb5a5e6003d20fccddae1a87a642e41c34e23f1e4f8d0f11b2931b"
+    }
+  ],
+  "total_files": 156,
+  "total_bytes": 2654779
+}

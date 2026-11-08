@@ -1,38 +1,39 @@
+# Node/Electron
+**/node_modules/
+**/out/
+**/dist/
+**/release/
+**/build/
+**/*.tsbuildinfo
+**/.eslintcache
 # Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-.env
-# Frontend and Electron build
-node_modules/
-out/
-dist/
-release/
-*.tsbuildinfo
-.eslintcache
+**/__pycache__/
+**/.venv/
+**/*.py[cod]
+**/.pytest_cache/
 # Visual Studio
-.vs/
-Debug/
-Release/
-x64/
-*.obj
-*.pdb
-*.ilk
-*.ipch
-*.suo
-*.user
-# Site data and derived artifacts
-*.drc
+**/.vs/
+**/x64/
+**/x86/
+**/Debug/
+**/Release/
+**/*.suo
+**/*.user
+# Vendor/proprietary SDK distribution (local only)
+**/HTHardDll.dll
+**/HTSoftDll.dll
+**/HTDisplayDll.dll
+**/MeasDll.dll
+**/libwave.dll
+**/*.lib
+# Field data and runtime artifacts
+**/*.drc
+**/*.drc.csv
+**/field_data/
+**/runtime/
+**/picture/
 *.log
-debugImg/
-picture/
-screenshots_private/
-field_data/
-data/raw/
-# Vendor binaries are not redistributed
-HTHardDll.dll
-HTSoftDll.dll
-HTDisplayDll.dll
-MeasDll.dll
-libwave.dll
+.env
+.env.*
+!.env.example
+.DS_Store

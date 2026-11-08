@@ -1,0 +1,143 @@
+@import './base.css';
+:root {
+  --ev-c-white: #ffffff;
+  --ev-c-white-soft: #f8f8f8;
+  --ev-c-white-mute: #f2f2f2;
+
+  --ev-c-black: #1b1b1f;
+  --ev-c-black-soft: #222222;
+  --ev-c-black-mute: #282828;
+
+  --ev-c-gray-1: #515c67;
+  --ev-c-gray-2: #414853;
+  --ev-c-gray-3: #32363f;
+
+  --ev-c-text-1: rgba(255, 255, 245, 0.86);
+  --ev-c-text-2: rgba(235, 235, 245, 0.6);
+  --ev-c-text-3: rgba(235, 235, 245, 0.38);
+  --ev-button-alt-border: transparent;
+  --ev-button-alt-text: var(--ev-c-text-1);
+  --ev-button-alt-bg: var(--ev-c-gray-3);
+  --ev-button-alt-hover-border: transparent;
+  --ev-button-alt-hover-text: var(--ev-c-text-1);
+  --ev-button-alt-hover-bg: var(--ev-c-gray-2);
+
+  --font-color-primary: #007aff;
+  --font-color-apple-green: #34c759;
+  --font-color-apple-orange: #ff9500;
+  --font-color-apple-red: #ff3b30;
+  --font-color-apple-gray: #8e8e93;
+}
+
+/* 主题变量扩展 */
+:root {
+  /* 动态变量 */
+  --primary-color: #007aff;
+  --lightVColor-color: #e3f2fd;
+  --base-font-size: 16px;
+  --base-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --enable-animations: 1;
+  --enable-blur: blur(10px);
+  --border-radius: 8px;
+  --el-menu-active-color: var(--primary-color) !important;
+
+  /* 动画过渡 */
+  --transition-fast: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-normal: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  --box-shadow-base: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --box-shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --box-shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 深色主题 */
+.dark-theme {
+  --color-background: #1c1c1e;
+  --color-background-soft: #2c2c2e;
+  --color-background-mute: #38383a;
+  --color-text: #ffffff;
+
+  --el-menu-bg-color: var(--color-background-soft) !important;
+  --el-menu-text-color: #ffffff !important;
+
+  --border-color: #212121;
+  --ev-c-text-1: rgba(255, 255, 255, 0.86);
+  --ev-c-text-2: rgba(255, 255, 255, 0.6);
+  --ev-c-text-3: rgba(255, 255, 255, 0.38);
+}
+
+/* 浅色主题 */
+.light-theme {
+  --color-background: #f2f2f7;
+  --color-background-soft: #ffffff;
+  --color-background-mute: #f2f2f2;
+
+  --color-text: #1d1d1f;
+
+  --el-menu-bg-color: var(--color-background-soft) !important;
+
+  --border-color: #efefef;
+  --ev-c-text-1: rgba(29, 29, 31, 0.86);
+  --ev-c-text-2: rgba(29, 29, 31, 0.6);
+  --ev-c-text-3: rgba(29, 29, 31, 0.38);
+}
+
+/* 动画控制 */
+* {
+  transition-duration: calc(var(--enable-animations) * var(--transition-normal));
+}
+
+/* 圆角控制 */
+.rounded {
+  border-radius: var(--border-radius);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes loading {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

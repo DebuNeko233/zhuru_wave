@@ -1,6 +1,5 @@
-# Dependencies used by the original f6.py
-Flask>=3.0,<4
+flask>=3.0,<4
 waitress>=3.0,<4
-numpy>=2.0,<3
-matplotlib>=3.9,<4
+numpy>=1.26,<3
+matplotlib>=3.8,<4
 python-dotenv>=1.0,<2
