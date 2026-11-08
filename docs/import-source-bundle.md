@@ -35,3 +35,12 @@ git push origin main
 ## 依赖
 
 桌面侧需要 Windows、Node.js/npm、Electron、厂商 DLL、Koffi、原生驱动；C++ 侧需要与 DLL 兼容的 MSVC、FFTW 与厂商 SDK；实验 Python 工程在 `algorithm_experiments/pyproject.toml` 单独定义依赖。不能把这些外部依赖视为已随 ZIP 和 GitHub 全量提供。
+
+## 本次源码包校验值
+
+- 文件：`zhuru_wave_source_bundle.zip`
+- SHA-256：`9d267c1d0759fe567ddac61eb21361ed4853f7c9c694ceb29d39b32e19c0f513`
+- 文件大小：1,626,112 bytes
+- 归档源码及资源条目：131 个（另含说明文件和哈希清单）
+
+校验命令：`Get-FileHash -Algorithm SHA256 .\zhuru_wave_source_bundle.zip`。以上哈希对应本次交付的单独 ZIP，不对应 GitHub 当前源码树。
