@@ -14,9 +14,8 @@ extraResources:
     to: 'native'
     filter: ['**/*']
 asarUnpack:
-  - resources/**
-  - '**/*.{dll,so,dylib,node}'
-  - node_modules/**
+  # 仅解包 Node 原生扩展；设备 DLL 经 extraResources 放在 resources/native。
+  - '**/*.node'
 win:
   executableName: wave
   target:

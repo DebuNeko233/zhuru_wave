@@ -2,8 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { promises as fs, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import icon from '../../resources/img.ico?asset'
-import { createDataWorker } from './data-worker'
-import { isMainThread } from 'worker_threads'
+import workerScriptPath from './data-worker?modulePath'
+import { Worker, isMainThread } from 'worker_threads'
 import path from 'path'
 import { WaveCheckRequestOptions } from './type'
 import { apiService } from './api'
@@ -69,11 +69,13 @@ async function getMainDataProvider() {
 
 async function getDataWorker() {
   if (!dataWorker) {
-    const libPath = path.join(__dirname, '../native/libwave.dll')
-    dataWorker = createDataWorker({
-      workerData: {
-        libPath: libPath
-      }
+    // 使用 electron-vite 的独立 Worker 入口，避免在线程中重新执行 Electron 主进程。
+    const libPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'native', 'libwave.dll')
+      : path.join(__dirname, '../../src/native/libwave.dll')
+
+    dataWorker = new Worker(workerScriptPath, {
+      workerData: { libPath }
     })
 
     // 监听 Worker 消息
