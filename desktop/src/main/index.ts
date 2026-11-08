@@ -557,7 +557,8 @@ if (isMainThread) {
         period_step: data.period_step,
         step1: data.step1,
         step2: data.step2,
-        rate: data.rate
+        rate: data.rate,
+        sample_rate_hz: data.sample_rate_hz
       })
       console.log(result)
       if (result.data.err_data_list) {
@@ -577,7 +578,8 @@ if (isMainThread) {
             isTriangle: false,
             err_pic_path_list: result_data.err_pic_path_list,
             err_data_list: result_data.err_data_list,
-            defectPoints: flattenTubiandianList(result_data.tubiandian_list)
+            defectPoints: flattenTubiandianList(result_data.tubiandian_list),
+            defectTypes: [...new Set((result_data.defects || []).flatMap((d: {types: string[]}) => d.types))]
           }
         }
       } else {
@@ -585,8 +587,8 @@ if (isMainThread) {
         return { success: false, error: '获取失败,请检查后端连接' }
       }
     } catch (error) {
-      console.error('IPC getSingleChannelData error:', error)
-      throw error
+      console.error('Wave detection service error:', error)
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
   })
 

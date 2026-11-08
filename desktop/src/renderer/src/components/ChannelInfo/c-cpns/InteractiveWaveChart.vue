@@ -624,17 +624,12 @@ const toggleSnapshot = () => {
   }
 }
 
-// 优化的分批加载方案
+// 离线导入顺序等待 Python 返回；实时设备采样仍保留 Worker 异步策略。
 interface StreamCSVOptions {
-  batchSize: number // 每批处理的行数
-  chunkSize: number // 每次读取的字符数
+  batchSize: number
+  chunkSize: number
   channelId: number
-  onBatchReady: (
-    data: number[],
-    batchIndex: number,
-    progress: number,
-    currentChannel: number
-  ) => void
+  onBatchReady: (data: number[], batchIndex: number, progress: number, currentChannel: number, metadata: Record<string, string>) => Promise<void>
   onComplete: (totalCount: number) => void
   onError: (error: Error) => void
 }
@@ -642,150 +637,158 @@ interface StreamCSVOptions {
 class CSVStreamReader {
   private file: File
   private options: StreamCSVOptions
-  private reader: FileReader
-  private buffer: string = ''
-  private position: number = 0
-  private batchIndex: number = 0
+  private isReading = false
+  private isPaused = false
+  private cancelled = false
+  private position = 0
+  private batchIndex = 0
+  private sampleCount = 0
   private currentBatch: number[] = []
-  private isReading: boolean = false
-  private isPaused: boolean = false // 新增：暂停状态
-  private timeoutId: number | NodeJS.Timeout | null = null // 新增：存储定时器ID
+  private metadata: Record<string, string> = {}
+  private format: 'unknown' | 'zhuru' | 'drc' | 'indexed' | 'scalar' = 'unknown'
+  private columns: string[] = []
+  private dataColumn = 0
+  private wake: (() => void) | null = null
 
   constructor(file: File, options: StreamCSVOptions) {
     this.file = file
     this.options = options
-    this.reader = new FileReader()
   }
 
   start() {
-    if (this.isReading && !this.isPaused) return
-    isLocalDataLoading.value = true
+    if (this.isReading) return
     this.isReading = true
-    this.isPaused = false
-    this.readNextChunk()
+    this.cancelled = false
+    isLocalDataLoading.value = true
+    void this.pump()
   }
 
   stop() {
+    this.cancelled = true
     this.isReading = false
     this.isPaused = false
+    this.wake?.()
+    this.wake = null
     isLocalDataLoading.value = false
-    // 清除定时器
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId)
-      this.timeoutId = null
-    }
   }
 
-  // 新增：暂停方法
-  pause() {
-    this.isPaused = true
-    // 清除定时器，停止继续读取
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId)
-      this.timeoutId = null
-    }
-  }
-  // 新增：恢复方法
+  pause() { this.isPaused = true }
   resume() {
-    if (this.isReading && this.isPaused) {
-      this.isPaused = false
-      // 恢复读取
-      this.readNextChunk()
-    }
+    this.isPaused = false
+    this.wake?.()
+    this.wake = null
   }
-
-  // 新增：获取状态的方法
   getStatus() {
-    return {
-      isReading: this.isReading,
-      isPaused: this.isPaused,
-      progress: (this.position / this.file.size) * 100,
-      currentBatch: this.batchIndex
+    return {isReading: this.isReading, isPaused: this.isPaused,
+      progress: 100 * this.position / Math.max(1, this.file.size), currentBatch: this.batchIndex}
+  }
+
+  private async waitReady() {
+    while (this.isPaused && !this.cancelled) {
+      await new Promise<void>(resolve => { this.wake = resolve })
     }
   }
 
-  private readNextChunk() {
-    // 检查暂停状态
-    if (this.isPaused || !this.isReading || this.position >= this.file.size) {
-      if (this.position >= this.file.size) {
-        this.finishReading()
-      }
-      return
-    }
-
-    const chunk = this.file.slice(this.position, this.position + this.options.chunkSize)
-
-    this.reader.onload = (e) => this.processChunk(e.target?.result as string)
-    this.reader.readAsText(chunk)
-  }
-
-  private processChunk(chunkText: string) {
-    // 检查是否被暂停
-    if (this.isPaused) return
-
-    this.buffer += chunkText
-    const lines = this.buffer.split('\n')
-
-    // 保留最后一行（可能不完整）
-    this.buffer = lines.pop() || ''
-
-    // 处理完整的行
-    for (const line of lines) {
-      const value = parseFloat(line.trim())
-      if (!isNaN(value)) {
-        this.currentBatch.push(value)
-
-        // 检查是否达到批次大小
-        if (this.currentBatch.length >= this.options.batchSize) {
-          this.emitBatch()
+  private parseLine(line: string): number | null {
+    const text = line.trim()
+    if (!text) return null
+    if (this.format === 'unknown') {
+      if (text.startsWith('DRC_File:') || text.startsWith('Channels_qnty:') || /^CH\s+Index\s+Value/i.test(text)) {
+        this.format = 'drc'
+      } else if (text.startsWith('meta_key,meta_value,sample_index')) {
+        this.format = 'zhuru'
+        this.columns = text.split(',').map(x => x.trim())
+        const requested = this.options.channelId
+        const selected = this.columns.findIndex(x =>
+          x.toLowerCase() === `ch${requested}_raw` ||
+          x.toLowerCase() === (requested === 1 ? 'x_raw' : 'y_raw'))
+        if (selected < 3 && this.columns.length > 4) {
+          throw new Error(`CSV 未包含通道 ${requested} 的原始采样列`)
         }
+        this.dataColumn = selected >= 3 ? selected : 3
+        return null
+      } else if (/^(index|sample_index),/i.test(text)) {
+        this.format = 'indexed'
+        return null
+      } else {
+        this.format = 'scalar'
       }
     }
-
-    this.position += this.options.chunkSize
-    const progress = (this.position / this.file.size) * 100
-    loadingProgress.value = progress
-
-    // 继续读取下一块
-    this.timeoutId = setTimeout(() => this.readNextChunk(), 800) // 避免阻塞UI
-  }
-
-  private async emitBatch() {
-    if (this.currentBatch.length > 0) {
-      const progress = (this.position / this.file.size) * 100
-      this.options.onBatchReady(
-        [...this.currentBatch],
-        this.batchIndex,
-        progress,
-        this.options.channelId
-      )
-      this.batchIndex++
-      this.currentBatch = []
+    if (this.format === 'drc') {
+      const cells = text.split(/\s+/)
+      if (cells.length !== 3 || !/^\d+$/.test(cells[0]) || !/^\d+$/.test(cells[1])) return null
+      const v = Number(cells[2])
+      return Number.isFinite(v) ? v : null
     }
-  }
-
-  private finishReading() {
-    // 处理剩余数据
-    if (this.buffer.trim()) {
-      const value = parseFloat(this.buffer.trim())
-      if (!isNaN(value)) {
-        this.currentBatch.push(value)
+    if (this.format === 'zhuru') {
+      const cells = text.split(',')
+      if (cells[0] && cells[1] !== undefined && cells[2] === '') {
+        this.metadata[cells[0].trim()] = cells[1].trim()
+        return null
       }
+      if (cells.length <= this.dataColumn || !/^\d+$/.test((cells[2] || '').trim())) return null
+      const v = Number(cells[this.dataColumn])
+      return Number.isFinite(v) ? v : null
     }
-
-    // 发送最后一批
-    if (this.currentBatch.length > 0) {
-      this.emitBatch()
+    if (this.format === 'indexed') {
+      const cells = text.split(',')
+      const v = Number(cells[1])
+      return cells.length >= 2 && Number.isFinite(v) ? v : null
     }
+    // Compatibility: old exported CSV contains one raw value per row.
+    const v = Number(text)
+    return Number.isFinite(v) ? v : null
+  }
 
-    this.options.onComplete(this.batchIndex * this.options.batchSize)
-    this.isReading = false
-    this.isPaused = false // 重置暂停状态
-    isLocalDataLoading.value = false
-    // 清除定时器
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId)
-      this.timeoutId = null
+  private async pushLine(line: string) {
+    const value = this.parseLine(line)
+    if (value === null) return
+    this.currentBatch.push(value)
+    this.sampleCount++
+    if (this.currentBatch.length >= this.options.batchSize) await this.flush()
+  }
+
+  private async flush() {
+    if (!this.currentBatch.length || this.cancelled) return
+    const values = this.currentBatch
+    this.currentBatch = []
+    await this.options.onBatchReady(values, this.batchIndex++,
+      Math.min(100, 100 * this.position / Math.max(1, this.file.size)),
+      this.options.channelId, this.metadata)
+  }
+
+  private async pump() {
+    const reader = this.file.stream().getReader()
+    const decoder = new TextDecoder('utf-8')
+    let rest = ''
+    try {
+      while (!this.cancelled) {
+        await this.waitReady()
+        if (this.cancelled) break
+        const {value, done} = await reader.read()
+        if (done) break
+        this.position += value.byteLength
+        const lines = (rest + decoder.decode(value, {stream: true})).split(/\r?\n/)
+        rest = lines.pop() || ''
+        for (const line of lines) {
+          await this.waitReady()
+          if (this.cancelled) break
+          await this.pushLine(line)
+        }
+        loadingProgress.value = Math.min(100, 100 * this.position / Math.max(1, this.file.size))
+      }
+      if (!this.cancelled) {
+        await this.pushLine(rest + decoder.decode())
+        await this.flush()
+        if (!this.cancelled) this.options.onComplete(this.sampleCount)
+      }
+    } catch (error) {
+      if (!this.cancelled) this.options.onError(error instanceof Error ? error : new Error(String(error)))
+    } finally {
+      try { await reader.cancel() } catch { /* already closed */ }
+      this.isReading = false
+      isLocalDataLoading.value = false
+      loadingProgress.value = 100
     }
   }
 }
@@ -805,16 +808,7 @@ const importData = async () => {
     currentStreamReader.value = null
   }
 
-  // 如果当前是在实时采集的话，我们要先停掉，等完成之后再重新采集.
-  const stopResult = await window.electronAPI.invoke('data:stop-collection')
-
-  if (stopResult.success) {
-    console.log(stopResult.message)
-  } else {
-    console.log(stopResult.error)
-    return
-  }
-
+  // 选取文件后再停硬件，取消对话框不影响实时采集。
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = '.csv'
@@ -831,16 +825,21 @@ const importData = async () => {
       return
     }
 
+    const stopResult = await window.electronAPI.invoke('data:stop-collection')
+    if (!stopResult.success) { alert('无法停止实时采集'); return }
+    let previousBatchWarn = false
+
     // 创建流式读取器
     const streamReader = new CSVStreamReader(file, {
-      batchSize: 10000, // 每批数据点
-      chunkSize: 64 * 1024, // 每次读取1MB
+      batchSize: 2000, // 约40个采样周期；优先避免把短异常稀释
+      chunkSize: 64 * 1024, // 每次读取 64 KiB
       channelId: props.channelId,
       onBatchReady: async (
         data: number[],
         batchIndex: number,
         progress: number,
-        currentChannel: number
+        currentChannel: number,
+        metadata: Record<string, string>
       ) => {
         console.log(
           `处理第 ${batchIndex + 1} 批数据: ${data.length} 个点, 进度: ${progress.toFixed(1)}%`
@@ -858,7 +857,8 @@ const importData = async () => {
           period_step: 2,
           rate: paramentSettingStore.programSettings.debugStorage.rate,
           step1: paramentSettingStore.programSettings.debugStorage.step1,
-          step2: paramentSettingStore.programSettings.debugStorage.step2
+          step2: paramentSettingStore.programSettings.debugStorage.step2,
+          sample_rate_hz: Number(metadata.sample_rate_hz) > 0 ? Number(metadata.sample_rate_hz) : undefined
         })
 
         console.log('收到返回的数据', isTriangleResult)
@@ -874,24 +874,26 @@ const importData = async () => {
           isWarn = true
           err_pic_path_list = isTriangleResult.err_pic_path_list
           err_data_list = isTriangleResult.err_data_list
-          defectPoints = isTriangleResult.defectPoints || []
+          defectPoints = (isTriangleResult.defectPoints || []).map((pt: {x: number, y: number}) => ({
+            x: pt.x, y: data[pt.x] ?? pt.y
+          }))
         } else {
-          status = '错误'
-          isWarn = true
+          status = '检测服务错误'
+          isWarn = false
           err_pic_path_list = []
           err_data_list = []
-          console.log(isTriangleResult.error)
+          defectPoints = []
+          console.error('离线检测服务异常', isTriangleResult.error)
         }
 
         // 构造数据对象（峰值、最小、平均电压及峰峰值均使用绝对值后的数据计算）
-        const absData = data.map((v) => Math.abs(v))
         const batchDataInfo: ChannelDataInfo = {
-          peakVoltage: Math.max(...absData),
-          minimumVoltage: Math.min(...absData),
-          averageVoltage: absData.reduce((sum, val) => sum + val, 0) / absData.length,
+          peakVoltage: Math.max(...data),
+          minimumVoltage: Math.min(...data),
+          averageVoltage: data.reduce((sum, val) => sum + val, 0) / data.length,
           status: status,
           deviation: `${calculateDeviation(data)}`,
-          range: `${Math.max(...absData) - Math.min(...absData)}`,
+          range: `${Math.max(...data) - Math.min(...data)}` ,
           showData: data,
           yAxisRange: { min: Math.min(...data), max: Math.max(...data) },
           isWarn: isWarn,
@@ -901,12 +903,12 @@ const importData = async () => {
           defectPoints: defectPoints
         }
 
-        if (isWarn) {
-          // 创建纯数据对象，避免包含不可序列化的属性
+        if (isWarn && !previousBatchWarn) {
+          // 同一段连续异常只生成一条报警记录，避免包含不可序列化的属性
           const alarmData = {
             channelId: currentChannel,
             timestamp: new Date().getTime(),
-            analysisConclusion: `当前波形不是三角波`,
+            analysisConclusion: `扫描波形检测异常：${(isTriangleResult.defectTypes || []).join('、') || '波形局部失真'}`,
             severity: 'critical' as const,
             snapshotData: {
               waveformData: Array.isArray(batchDataInfo.showData)
@@ -937,10 +939,12 @@ const importData = async () => {
             level: 'warn',
             message: `当前通道触发报警`,
             source: `通道${currentChannel}信息`,
-            details: `当前通道${props.channelId}当前波形不是三角波,已追加到报警队列中~`
+            details: `通道${props.channelId}离线波形检测出异常，已保存报警快照`
           })
           showAlarmNotification(alarmData)
         }
+
+        previousBatchWarn = isWarn
 
         // 传递给上层组件
         emit('changeLocalMode', batchDataInfo, {
@@ -982,14 +986,7 @@ const importData = async () => {
           totalCount
         })
 
-        // 重新实时采集.
-        const settings = JSON.parse(JSON.stringify(paramentSettingStore.allSettings))
-        const startResult = await window.electronAPI.invoke('data:start-collection', settings)
-        if (startResult.success) {
-          console.log(startResult.message)
-        } else {
-          console.log(startResult.error)
-        }
+        // 离线回放结束后停留在最后一帧，不自动启动硬件。
       },
 
       onError: (error: Error) => {
@@ -1025,7 +1022,17 @@ const exportData = () => {
   if (!hasData.value) return
 
   const data = displayData.value!
-  const csvContent = data.showData.join('\n')
+  const header = [
+    'meta_key,meta_value,sample_index,X_raw',
+    'format,zhuru-wave-v1,,',
+    'sample_rate_hz,,,',
+    'channel_count,1,,',
+    `channel_names,CH${props.channelId},,`,
+    'amplitude_unit,raw,,',
+    'mode,export,,',
+  ]
+  const csvContent = header.join('\n') + '\n' +
+    data.showData.map((value, index) => `,,${index},${value}`).join('\n')
 
   const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)

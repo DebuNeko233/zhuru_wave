@@ -841,19 +841,7 @@ export const useChannelDataStore = defineStore('channelData', () => {
         if (src.originalLength) {
           copy.originalLength = src.originalLength
         }
-        // 再次缩放 defectPoints，以防某些路径未执行
-        if (
-          Array.isArray(copy.defectPoints) &&
-          copy.defectPoints.length > 0 &&
-          copy.originalLength &&
-          copy.originalLength !== (copy.showData?.length || 0)
-        ) {
-          const scale = (copy.showData?.length || 0) / copy.originalLength
-          copy.defectPoints = copy.defectPoints.map((pt) => ({
-            x: Math.floor(pt.x * scale),
-            y: pt.y
-          }))
-        }
+        // Worker 已将原始索引映射到显示坐标；这里不二次缩放。
         return copy
       }
 

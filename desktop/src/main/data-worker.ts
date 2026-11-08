@@ -472,11 +472,10 @@ if (isMainThread) {
         continue
       }
 
-      // 峰值、最小、平均电压及峰峰值均使用绝对值后的数据计算
-      const absValues = currentChannelData.map(v => Math.abs(v))
-      const maxValue = Math.max(...absValues)
-      const minValue = Math.min(...absValues)
-      const mean = absValues.reduce((sum, val) => sum + val, 0) / absValues.length
+      // 采样值可能跨过 0：峰峰值必须是 max(raw)-min(raw)。
+      const maxValue = Math.max(...currentChannelData)
+      const minValue = Math.min(...currentChannelData)
+      const mean = currentChannelData.reduce((sum, val) => sum + val, 0) / currentChannelData.length
       // 标准差/方差用原始数据计算（用于连接状态判断）
       const originalMean = currentChannelData.reduce((sum, val) => sum + val, 0) / currentChannelData.length
       const variance =
@@ -533,9 +532,10 @@ if (isMainThread) {
         const result_data = check_result?.data
 
         if (!result_data || typeof result_data.pass_flag === 'undefined') {
-          currentChannel.status = '异常'
-          currentChannel.isWarn = true
-          isTriangleResult = false
+          // 网络/服务器故障不是物理波形故障。
+          currentChannel.status = '检测服务错误'
+          currentChannel.isWarn = false
+          isTriangleResult = null
         } else if (result_data.pass_flag) {
           isTriangleResult = true
         } else {
@@ -549,7 +549,7 @@ if (isMainThread) {
         if (isTriangleResult) {
           currentChannel.status = '正常'
           currentChannel.isWarn = false
-        } else {
+        } else if (isTriangleResult === false) {
           currentChannel.status = '警告'
           currentChannel.isWarn = true
         }

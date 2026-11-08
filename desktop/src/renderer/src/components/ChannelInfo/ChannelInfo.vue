@@ -63,10 +63,11 @@ const handleLocalData = (data: ChannelDataInfo, options) => {
   if (!isLocal.value) {
     isLocal.value = true
   }
-  currentLocalChannelData.value = data
+  if (data) currentLocalChannelData.value = data
   // 结束
   if (options.isComplete) {
-    isLocal.value = false
+    // 回放结束时仍显示最后一帧；只有退出页面/启动实时采集才切换。
+    isLocal.value = true
   }
 }
 

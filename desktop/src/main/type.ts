@@ -8,6 +8,7 @@ export interface WaveCheckRequest {
   step1: number //斜率步长
   step2: number //斜率差步长
   rate: number // 正确率
+  sample_rate_hz?: number // 离线原始采样文件中的采样率（未知则不填）
 }
 
 export interface WaveCheckRequestOptions extends WaveCheckRequest {
