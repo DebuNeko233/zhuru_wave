@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+# Frontend and Electron build
+node_modules/
+out/
+dist/
+release/
+*.tsbuildinfo
+.eslintcache
+# Visual Studio
+.vs/
+Debug/
+Release/
+x64/
+*.obj
+*.pdb
+*.ilk
+*.ipch
+*.suo
+*.user
+# Site data and derived artifacts
+*.drc
+*.log
+debugImg/
+picture/
+screenshots_private/
+field_data/
+data/raw/
+# Vendor binaries are not redistributed
+HTHardDll.dll
+HTSoftDll.dll
+HTDisplayDll.dll
+MeasDll.dll
+libwave.dll
