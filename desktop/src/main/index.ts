@@ -952,34 +952,9 @@ if (isMainThread) {
         isDeviceInitialized = false
       }
 
-      // 创建新的 Worker
+      // 使用统一创建入口，复用 DLL 路径和消息/错误事件监听器。
       console.log('🔧 创建新的数据采集 Worker')
-      dataWorker = createDataWorker({ workerData: { options } })
-
-      // 监听 Worker 消息
-      dataWorker.on('message', (message: any) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          if (message.type === 'data' && message.data) {
-            mainWindow.webContents.send('data:update', message.data)
-          } else if (message.error) {
-            mainWindow.webContents.send('data:error', message.error)
-          }
-        }
-      })
-
-      dataWorker.on('error', (error: Error) => {
-        console.log('💥 数据采集 Worker 错误:', error)
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('data:error', error.message)
-        }
-      })
-
-      dataWorker.on('exit', (code: number, _: string) => {
-        console.log(`🔚 数据采集 Worker 退出，退出码: ${code}`)
-        dataWorker = null
-        isDataCollectionRunning = false
-        isDeviceInitialized = false
-      })
+      await getDataWorker()
 
       // 初始化设备并等待响应
       console.log('🔌 在新 Worker 中初始化设备...')
