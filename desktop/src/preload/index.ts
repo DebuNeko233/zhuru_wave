@@ -26,6 +26,7 @@ const validChannels = [
   'data:reinitialize-device-with-new-worker',
   'data:reset-device',
   'data:isTriangle',
+  'data:detector-health',
   'fs:read-alarm-files',
   'fs:save-alarm-file',
   'fs:delete-alarm-file',
