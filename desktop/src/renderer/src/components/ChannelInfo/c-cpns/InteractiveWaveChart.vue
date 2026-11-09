@@ -154,7 +154,6 @@ import {
 import * as echarts from 'echarts'
 
 import type { ChannelDataInfo } from '@main/type'
-import { useChannelDataStore } from '@renderer/store/channelDataStore'
 import { OfflinePeakCounter } from './offlineMetrics'
 import type { AlarmFileData, AlarmData } from '@renderer/types/alarmData'
 import { useLogStore } from '@renderer/store/logStore'
@@ -577,7 +576,6 @@ let updateTimer: ReturnType<typeof setTimeout> | null = null
 let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
 // 数据存储和API
-const channelDataStore = useChannelDataStore()
 
 const format = (percentage) => (percentage === 100 ? 'Full' : `${percentage}%`)
 
