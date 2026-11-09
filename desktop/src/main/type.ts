@@ -23,7 +23,8 @@ export interface YAxisRange {
 export interface DefectCycle {
   start_index: number
   end_index_exclusive: number
-  peak_index: number
+  peak_index: number | null // 仅局部缺陷有准确的标记位置
+  marker_kind?: string | null
   types: string[]
   score: number
 }

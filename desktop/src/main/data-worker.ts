@@ -4,6 +4,7 @@ import { apiService } from './api'
 import type { ProgramSettings, DeviceSettings } from './type'
 import { ChannelDataInfo, YAxisRange, ProcessedDataResponse } from './type'
 import { flattenTubiandianList } from './utils'
+import { mapDefectsToDisplay } from './defect-alignment'
 interface WorkerMessage {
   cmd:
     | 'start'
@@ -405,26 +406,6 @@ if (isMainThread) {
     }
   }
 
-  // 均匀采样函数
-  function uniformSample(data: number[], targetLen: number = 1000): number[] {
-    if (!data || data.length === 0) {
-      return []
-    }
-    if (data.length <= targetLen) {
-      return [...data]
-    }
-    const result: number[] = []
-    const step = data.length / targetLen
-
-    for (let i = 0; i < targetLen; i++) {
-      const index = Math.floor(i * step)
-      if (index < data.length) {
-        result.push(data[index])
-      }
-    }
-    return result
-  }
-
   // 计算Y轴范围函数
   function calculateChannelYAxisRange(data: number[]): YAxisRange {
     if (!data || data.length === 0) {
@@ -543,6 +524,7 @@ if (isMainThread) {
           currentChannel.err_pic_path_list = result_data.err_pic_path_list
           currentChannel.err_data_list = result_data.err_data_list
           currentChannel.defectPoints = flattenTubiandianList(result_data.tubiandian_list)
+          currentChannel.defectCycles = Array.isArray(result_data.defect_cycles) ? result_data.defect_cycles : []
         }
 
         // 这里默认先给正常
@@ -555,27 +537,19 @@ if (isMainThread) {
         }
       }
 
-      currentChannel.showData = uniformSample(currentChannelData, targetLength)
-      // 保存原始长度，后面用于将 defectPoints 缩放到 showData 采样后的坐标
+      // Detection uses full-resolution samples; the display must use one matching
+      // coordinate map and preserve the exact samples chosen as defect markers.
+      const display = mapDefectsToDisplay(
+        currentChannelData,
+        targetLength,
+        currentChannel.defectPoints || [],
+        currentChannel.defectCycles || []
+      )
+      currentChannel.showData = display.showData
       currentChannel.originalLength = currentChannelData.length
-      currentChannel.yAxisRange = calculateChannelYAxisRange(currentChannel.showData)
-
-      // 如果存在报警点并且 showData 与原始长度不一致, 进行坐标缩放
-      if (
-        Array.isArray(currentChannel.defectPoints) &&
-        currentChannel.defectPoints.length > 0 &&
-        currentChannel.originalLength &&
-        currentChannel.originalLength !== currentChannel.showData.length
-      ) {
-        const scale = currentChannel.showData.length / currentChannel.originalLength
-        currentChannel.defectPoints = currentChannel.defectPoints.map((pt) => ({
-          x: Math.floor(pt.x * scale),
-          y: pt.y
-        }))
-        console.log(
-          `🔧 缩放报警点: 原始 ${currentChannel.originalLength} → 显示 ${currentChannel.showData.length}, scale=${scale}`
-        )
-      }
+      currentChannel.defectPoints = display.defectPoints
+      currentChannel.defectCycles = display.defectCycles
+      currentChannel.yAxisRange = calculateChannelYAxisRange(display.showData)
 
       result[`ch${i + 1}`] = currentChannel
     }

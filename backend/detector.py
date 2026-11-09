@@ -99,6 +99,19 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
         slope_ideal = np.diff(ideal)
         kink = float(np.max(np.abs(diffs - slope_ideal)) / amp)
         err_i = int(np.argmax(np.abs(residual)))
+        # Localize each defect by its own feature, not by an unrelated residual.
+        slope_error = np.abs(diffs - slope_ideal)
+        kink_i = int(np.argmax(slope_error) + 1)
+        near_kink = slice(max(0, kink_i - 2), min(len(v), kink_i + 3))
+        kink_i = int(near_kink.start + np.argmax(np.abs(residual[near_kink])))
+        flat_top = float(np.mean(v >= np.max(v) - amp * .05))
+        flat_bottom = float(np.mean(v <= np.min(v) + amp * .05))
+        flat_i = int(peak if flat_top >= flat_bottom else np.argmin(sv))
+        center_edges = np.flatnonzero(near_zero)
+        if center_edges.size:
+            zero_i = int(center_edges[np.argmax(slope_error[center_edges])] + 1)
+        else:
+            zero_i = int(np.argmin(np.abs(v - center)))
         cycles.append({'start': start, 'end': end,
                        'period_samples': end - start,
                        'peak_to_peak_raw': amp,
@@ -109,6 +122,9 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
                        'peak_flat_ratio': top_flat,
                        'zero_plateau_ratio': zero_flat,
                        'worst_index': int(start + err_i),
+                       'kink_index': int(start + kink_i),
+                       'flat_index': int(start + flat_i),
+                       'zero_index': int(start + zero_i),
                        'worst_residual_raw': float(residual[err_i])})
     if len(cycles) < 4:
         raise ValueError('insufficient complete triangle cycles')
@@ -152,8 +168,19 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
         if sustained_zero[i]:
             reasons.append('zero_crossing_step')
         if reasons:
+            # Amplitude/period faults are interval anomalies: no fabricated point.
+            if 'spike_or_step' in reasons:
+                marker, marker_kind = c['kink_index'], 'spike_or_step'
+            elif 'zero_crossing_step' in reasons:
+                marker, marker_kind = c['zero_index'], 'zero_crossing_step'
+            elif 'clipped_or_rounded_peak' in reasons:
+                marker, marker_kind = c['flat_index'], 'clipped_or_rounded_peak'
+            elif 'nonlinear_slope' in reasons:
+                marker, marker_kind = c['worst_index'], 'nonlinear_slope'
+            else:
+                marker, marker_kind = None, None
             bad.append({'start_index': c['start'], 'end_index_exclusive': c['end'],
-                        'peak_index': c['worst_index'], 'types': reasons,
+                        'peak_index': marker, 'marker_kind': marker_kind, 'types': reasons,
                         'score': round(max(c['linearity_error'] / err_thr,
                                            c['kink_score'] / kink_thr,
                                            amp_dev / amp_thr,

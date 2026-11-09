@@ -96,3 +96,26 @@ def test_confirmed_alarm_returns_every_flagged_cycle_as_separate_interval():
 def test_clean_wave_returns_no_cycle_highlights():
     result = analyze_wave(triangle().tolist())
     assert result['defect_cycles'] == []
+
+
+def test_impulse_markers_match_actual_injected_samples():
+    wave = triangle()
+    for cycle in range(20, 35):
+        wave[cycle * 50 + 12] += 1.2
+    result = analyze_wave(wave.tolist())
+    markers = [c for c in result['defect_cycles'] if c.get('marker_kind') == 'spike_or_step']
+    assert len(markers) >= 12
+    for cycle in markers:
+        assert cycle['peak_index'] is not None
+        assert cycle['peak_index'] % 50 == 12
+        assert cycle['start_index'] <= cycle['peak_index'] < cycle['end_index_exclusive']
+
+
+def test_amplitude_only_faults_are_intervals_not_fake_point_markers():
+    wave = triangle()
+    for cycle in range(20, 35):
+        wave[cycle * 50:cycle * 50 + 50] *= 1.55
+    result = analyze_wave(wave.tolist())
+    amplitude_only = [c for c in result['defect_cycles'] if c['types'] == ['amplitude_drift']]
+    assert len(amplitude_only) >= 10
+    assert all(c['peak_index'] is None and c['marker_kind'] is None for c in amplitude_only)
