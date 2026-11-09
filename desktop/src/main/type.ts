@@ -72,6 +72,7 @@ export interface ChannelDataInfo {
   deviation: string // 偏差值
   range: string // 区间值
   showData: number[] // 展示用的数据
+  xySamples?: number[] // 同一采集批次、同一索引抽取的 XY 专用数据；不含缺陷点强制保留修正
   metricResults?: FourWaveMetrics
   peakStableSpans?: StablePeakSpan[]
   suspectCycles?: DefectCycle[]

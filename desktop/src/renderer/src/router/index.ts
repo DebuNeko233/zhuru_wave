@@ -4,6 +4,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 const MainWindow = () => import('@renderer/components/MainWindow/MainWindow.vue')
+const LissajousPage = () => import('@renderer/components/Lissajous/LissajousPage.vue')
 const RecordPage = () => import('@renderer/components/RecordPage/RecordPage.vue')
 const Login = () => import('@renderer/components/Login/Login.vue')
 const Channelinfo = () => import('@renderer/components/ChannelInfo/ChannelInfo.vue')
@@ -21,6 +22,12 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Home',
     component: MainWindow,
+    meta: { requiresAuth: false, KeepAlive: true }
+  },
+  {
+    path: '/lissajous',
+    name: 'Lissajous',
+    component: LissajousPage,
     meta: { requiresAuth: false, KeepAlive: true }
   },
   {

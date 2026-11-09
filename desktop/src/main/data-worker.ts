@@ -556,6 +556,12 @@ if (isMainThread) {
         currentChannel.defectCycles || []
       )
       currentChannel.showData = display.showData
+      // Paired XY data must use the identical uniform sample indices for every channel.
+      // The independent glitch-preserving showData used for 1-D inspection is NOT synchronized.
+      const xyCount = Math.min(currentChannelData.length,
+        Math.max(256, Math.trunc(targetLength) || 1024))
+      currentChannel.xySamples = Array.from({ length: xyCount }, (_, j) =>
+        currentChannelData[Math.floor(j * currentChannelData.length / xyCount)])
       currentChannel.originalLength = currentChannelData.length
       currentChannel.defectPoints = display.defectPoints
       currentChannel.defectCycles = display.defectCycles

@@ -27,6 +27,7 @@ const validChannels = [
   'data:reset-device',
   'data:isTriangle',
   'data:detector-health',
+  'data:lissajous',
   'fs:read-alarm-files',
   'fs:save-alarm-file',
   'fs:delete-alarm-file',

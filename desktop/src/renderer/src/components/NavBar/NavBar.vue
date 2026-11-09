@@ -17,6 +17,7 @@
       <el-menu-item index="1-3">通道X2</el-menu-item>
       <el-menu-item index="1-4">通道Y1</el-menu-item>
       <el-menu-item index="1-5">通道Y2</el-menu-item>
+      <el-menu-item index="1-6">XY 李萨如</el-menu-item>
     </el-sub-menu>
     <el-menu-item index="2">
       <el-icon size="25">
@@ -62,6 +63,7 @@ const menuRouteMap: Record<string, string> = {
   '1-3': '/channel/2',
   '1-4': '/channel/3',
   '1-5': '/channel/4',
+  '1-6': '/lissajous',
   '2': '/record', // 报警记录
   '3': '/logs', // 日志
   '4': '/Setting' // 设置

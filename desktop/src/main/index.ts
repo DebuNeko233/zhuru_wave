@@ -6,7 +6,7 @@ import workerScriptPath from './data-worker?modulePath'
 import { Worker, isMainThread } from 'worker_threads'
 import path from 'path'
 import { WaveCheckRequestOptions } from './type'
-import { apiService, getRequest } from './api'
+import { apiService, getRequest, postRequest } from './api'
 // import { rejects } from 'assert';
 import { flattenTubiandianList } from './utils'
 
@@ -563,6 +563,32 @@ if (isMainThread) {
         success: false,
         error: error instanceof Error ? error.message : String(error)
       }
+    }
+  })
+
+  // Analyse only explicitly synchronized, equal-length paired samples.
+  // The Python endpoint defaults to UNVERIFIED until field-calibrated thresholds exist.
+  ipcMain.handle('data:lissajous', async (_, args: {
+    wave_x: number[]; wave_y: number[]; synchronized: boolean
+  }) => {
+    const x = args?.wave_x
+    const y = args?.wave_y
+    if (!args?.synchronized || !Array.isArray(x) || !Array.isArray(y) ||
+        x.length !== y.length || x.length < 256 || x.length > 4096 ||
+        !x.every(Number.isFinite) || !y.every(Number.isFinite)) {
+      return { success: false, error: '需要 256–4096 个同批次、严格同步的 X/Y 采样点' }
+    }
+    try {
+      const response = await postRequest<{ code: number; data: unknown; msg?: string }>(
+        '/wave_check_pair',
+        { data: { wave_x: x, wave_y: y, synchronized: true } },
+        { timeout: 8000 }
+      )
+      return response.code === 200
+        ? { success: true, data: response.data }
+        : { success: false, error: response.msg || '分析失败' }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
 
