@@ -586,10 +586,17 @@ if (isMainThread) {
       }
       if (result.code === 200) {
         const result_data = result.data
+        const diagnosticFields = {
+          metricResults: result_data.metric_results,
+          cycleMetrics: result_data.cycle_metrics || [],
+          peakStableSpans: result_data.peak_stable_spans || [],
+          suspectCycles: result_data.suspect_cycles || []
+        }
         if (result_data.pass_flag) {
           return {
             success: true,
-            isTriangle: true
+            isTriangle: true,
+            ...diagnosticFields
           }
         } else {
           console.log('tubiandian_list', result_data.tubiandian_list)
@@ -600,6 +607,7 @@ if (isMainThread) {
             err_data_list: result_data.err_data_list,
             defectPoints: flattenTubiandianList(result_data.tubiandian_list),
             defectCycles: result_data.defect_cycles || [],
+            ...diagnosticFields,
             defectTypes: [...new Set((result_data.defects || []).flatMap((d: {types: string[]}) => d.types))]
           }
         }

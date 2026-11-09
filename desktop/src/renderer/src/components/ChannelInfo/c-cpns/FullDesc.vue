@@ -1,179 +1,71 @@
 <template>
-  <div class="left_fullDesc_title">
-    <div class="title">通道{{ channelId }}: 详细信息</div>
-    <div class="status-indicator" :class="{ live: isConnect, disconnect: !isConnect }">
-      <span class="dot"></span>
-      {{ isConnect ? '已连接' : '断开' }}
-    </div>
-  </div>
-  <div class="info-grid">
-    <div class="info-item">
-      <span class="label">峰值电压</span>
-      <span class="value">{{ channelData?.peakVoltage != null ? Number(channelData.peakVoltage).toFixed(2) : '0.00' }}V</span>
-    </div>
-    <div class="info-item">
-      <span class="label">最小电压</span>
-      <span class="value">{{ channelData?.minimumVoltage != null ? Number(channelData.minimumVoltage).toFixed(2) : '0.00' }}V</span>
-    </div>
-    <div class="info-item">
-      <span class="label">平均电压</span>
-      <span class="value">{{ channelData?.averageVoltage != null ? Number(channelData.averageVoltage).toFixed(2) : '0.00' }}V</span>
-    </div>
-    <div class="info-item">
-      <span class="label">状态</span>
-      <span class="value" :class="getStatusClass(channelData?.status)">{{
-        channelData?.status || '未知'
-      }}</span>
-    </div>
-    <!-- <div class="info-item">
-      <span class="label">频率</span>
-      <span class="value">125Hz</span>
-    </div> -->
-    <div class="info-item">
-      <span class="label">数据数量</span>
-      <span class="value">{{ channelData?.showData?.length || 0 }}</span>
-    </div>
-    <!-- <div class="info-item">
-      <span class="label">偏差值</span>
-      <span class="value status-warning">{{ channelData?.deviation != null ? Number(channelData.deviation).toFixed(2) : '0.00' }}</span>
-    </div>
-    <div class="info-item">
-      <span class="label">标准差</span>
-      <span class="value">{{ calculateStandardDeviation() }}</span>
-    </div> -->
-    <div class="info-item">
-      <span class="label">峰峰值</span>
-      <span class="value status-danger">{{ channelData?.range != null ? parseFloat(channelData.range).toFixed(2) : '0.00' }}</span>
+  <div class="wave-metrics">
+    <div class="wave-metrics-title">通道{{ channelId }} · 波形检测</div>
+    <div class="metric-grid">
+      <div v-for="item in metricCards" :key="item.label"
+           class="metric-card" :class="{ 'metric-alert': item.status === 'ALERT' }">
+        <div class="metric-label">{{ item.label }}</div>
+        <div class="metric-main">
+          <span class="metric-value">{{ item.value }}</span>
+          <span class="metric-unit">{{ item.unit }}</span>
+        </div>
+        <div v-if="item.status === 'ALERT'" class="metric-warning">检测到异常</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ChannelDataInfo } from '@main/type'
+import { computed } from 'vue'
+import type { ChannelDataInfo, WaveMetricStatus } from '@main/type'
 
-interface Props {
+const props = defineProps<{
   channelId: number
   channelData: ChannelDataInfo | null
   isConnect: boolean
-}
+}>()
 
-withDefaults(defineProps<Props>(), {
-  isConnect: true
+const format = (value: number | null | undefined, digits = 2): string =>
+  typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : '—'
+
+const metricCards = computed(() => {
+  const data = props.channelData?.metricResults
+  const blank: WaveMetricStatus = 'DATA_INSUFFICIENT'
+  return [
+    { label: '峰峰值', value: format(data?.peak_to_peak.value), unit: 'raw', status: data?.peak_to_peak.status ?? blank },
+    { label: '频率', value: format(data?.frequency.value), unit: 'Hz', status: data?.frequency.status ?? blank },
+    { label: '斜率', value: data?.slope
+        ? `↑ ${format(data.slope.rise_value)} / ↓ ${format(data.slope.fall_value)}` : '—',
+      unit: 'raw/点', status: data?.slope.status ?? blank },
+    { label: '峰值稳定周期', value: data?.peak_stable_cycles
+        ? String(data.peak_stable_cycles.value ?? '—') : '—',
+      unit: '周期', status: data?.peak_stable_cycles.status ?? blank }
+  ]
 })
-
-// 获取状态样式类
-const getStatusClass = (status: string | undefined) => {
-  if (!status) return ''
-  switch (status) {
-    case '正常':
-      return 'status-normal'
-    case '警告':
-      return 'status-warning'
-    case '异常':
-      return 'status-danger'
-    default:
-      return ''
-  }
-}
-
 </script>
 
 <style scoped lang="less">
-.left_fullDesc_title {
-  display: flex;
-  justify-content: space-between;
-  padding-bottom: 5px;
-  .title {
-    font-weight: 500px;
-  }
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 12px;
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    &.live {
-      background: #e8f5e8;
-      color: #2e7d32;
-
-      .dot {
-        background: #4caf50;
-      }
-    }
-
-    &.disconnect {
-      background: #fff3e0;
-      color: #f57c00;
-
-      .dot {
-        background: #ff9800;
-        animation: none;
-      }
-    }
-  }
+.wave-metrics-title {
+  font-weight: 600;
+  margin-bottom: 10px;
 }
-
-.info-grid {
+.metric-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px 24px;
-  background: @bg-color-light-gray;
-  border: 1px solid @border-color;
-  border-radius: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.metric-card {
+  min-width: 0;
+  border: 1px solid var(--border-color, #d9dce2);
+  border-radius: 8px;
   padding: 12px;
+  background: var(--bg-color-light-gray, transparent);
 }
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  .label {
-    color: #666;
-    font-size: 0.8rem;
-    font-weight: 400;
-  }
-
-  .value {
-    color: #333;
-    font-size: 0.8rem;
-    font-weight: 500;
-
-    &.status-normal {
-      color: @success-color;
-    }
-    &.status-warning {
-      color: @warning-color;
-    }
-    &.status-danger {
-      color: @danger-color;
-    }
-  }
-}
-
-// 修复媒体查询 - 使用正确的语法
-@media screen and (max-width: 1920px) {
-  .left_fullDesc_title {
-    .title {
-      font-size: 0.8rem;
-    }
-  }
-  .info-item {
-    .label {
-      font-size: 0.55rem !important; // 增加字体大小
-    }
-    .value {
-      font-size: 0.55rem !important; // 增加字体大小
-    }
-  }
-}
+.metric-alert { border-color: #e05858; }
+.metric-label { color: var(--text-color-secondary, #777); font-size: 12px; }
+.metric-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; padding-top: 7px; }
+.metric-value { font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 600; overflow-wrap: anywhere; }
+.metric-unit { font-size: 11px; opacity: .65; }
+.metric-warning { color: #d64e4e; font-size: 11px; margin-top: 4px; }
+@media (max-width: 1100px) { .metric-value { font-size: 16px; } }
 </style>

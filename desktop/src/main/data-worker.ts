@@ -511,6 +511,16 @@ if (isMainThread) {
         let isTriangleResult
 
         const result_data = check_result?.data
+        if (result_data?.metric_results) {
+          currentChannel.metricResults = result_data.metric_results
+          // The native frequency API can provide Hz even if the detector
+          // request has no explicit ADC sample rate.
+          if (currentChannel.metricResults?.frequency &&
+              Number.isFinite(currentChannel.frequency) && (currentChannel.frequency ?? 0) > 0) {
+            currentChannel.metricResults.frequency.value = currentChannel.frequency
+            currentChannel.metricResults.frequency.status = 'REFERENCE'
+          }
+        }
 
         if (!result_data || typeof result_data.pass_flag === 'undefined') {
           // 网络/服务器故障不是物理波形故障。

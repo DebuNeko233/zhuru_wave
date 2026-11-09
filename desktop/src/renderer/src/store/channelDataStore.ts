@@ -601,7 +601,10 @@ export const useChannelDataStore = defineStore('channelData', () => {
                 : [],
               defectPoints: Array.isArray(channelData[i].defectPoints)
                 ? deepClone(channelData[i].defectPoints)
-                : []
+                : [],
+              metricResults: channelData[i].metricResults
+                ? deepClone(channelData[i].metricResults)
+                : undefined
             }
           }
 

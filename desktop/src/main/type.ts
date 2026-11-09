@@ -29,6 +29,40 @@ export interface DefectCycle {
   score: number
 }
 
+export type WaveMetricStatus = 'ALERT' | 'REFERENCE' | 'DATA_INSUFFICIENT'
+export interface WaveMetricValue {
+  value?: number | null
+  rise_value?: number | null
+  fall_value?: number | null
+  status: WaveMetricStatus
+  unit: string
+  variation_cv?: number
+  period_samples?: number
+  period_jitter_cv?: number
+  linearity_error?: number
+  reference_peak_to_peak_raw?: number
+}
+export interface FourWaveMetrics {
+  peak_to_peak: WaveMetricValue
+  frequency: WaveMetricValue
+  slope: WaveMetricValue
+  peak_stable_cycles: WaveMetricValue
+}
+export interface StablePeakSpan {
+  start_index: number
+  end_index_exclusive: number
+  cycle_count: number
+}
+export interface WaveCycleMetric {
+  start_index: number
+  end_index_exclusive: number
+  peak_to_peak_raw: number
+  period_samples: number
+  rise_slope_raw_per_sample: number
+  fall_slope_raw_per_sample: number
+  linearity_error: number
+}
+
 export interface ChannelDataInfo {
   frequency?: number // 信号频率(Hz)，优先来自 native 频率接口
   peakVoltage: number // 最高峰值电压
@@ -38,6 +72,10 @@ export interface ChannelDataInfo {
   deviation: string // 偏差值
   range: string // 区间值
   showData: number[] // 展示用的数据
+  metricResults?: FourWaveMetrics
+  peakStableSpans?: StablePeakSpan[]
+  suspectCycles?: DefectCycle[]
+  sampleRateHz?: number
   originalLength?: number // 原始数据长度，便于缩放报警点坐标
   yAxisRange: YAxisRange // y轴范围
   isWarn: boolean

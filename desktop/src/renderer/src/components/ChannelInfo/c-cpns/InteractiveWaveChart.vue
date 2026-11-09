@@ -155,6 +155,7 @@ import * as echarts from 'echarts'
 
 import type { ChannelDataInfo } from '@main/type'
 import { useChannelDataStore } from '@renderer/store/channelDataStore'
+import { OfflinePeakCounter } from './offlineMetrics'
 import type { AlarmFileData, AlarmData } from '@renderer/types/alarmData'
 import { useLogStore } from '@renderer/store/logStore'
 import useAlarmDataStore from '@renderer/store/alarmDataStore'
@@ -373,6 +374,25 @@ const getWaveMarkAreas = (total: number) => {
     ]
   ]
 
+  for (const period of displayData.value?.peakStableSpans || []) {
+    const start = Math.max(0, Math.floor(period.start_index))
+    const end = Math.min(total, Math.ceil(period.end_index_exclusive))
+    if (Number.isFinite(start) && Number.isFinite(end) && start < end) {
+      marked.push([{ xAxis: start, itemStyle: {
+        color: 'rgba(35, 166, 112, 0.12)', borderColor: 'rgba(35, 166, 112, 0.28)'
+      } }, { xAxis: end - 1 }])
+    }
+  }
+  // 候选回折仅以琥珀色提示，不直接代表已确认报警。
+  for (const period of displayData.value?.suspectCycles || []) {
+    const start = Math.max(0, Math.floor(period.start_index))
+    const end = Math.min(total, Math.ceil(period.end_index_exclusive))
+    if (Number.isFinite(start) && Number.isFinite(end) && start < end) {
+      marked.push([{ xAxis: start, itemStyle: {
+        color: 'rgba(234, 164, 46, 0.12)', borderColor: 'rgba(234, 164, 46, 0.28)'
+      } }, { xAxis: end - 1 }])
+    }
+  }
   for (const period of displayData.value?.defectCycles || []) {
     if (!Number.isFinite(period.start_index) || !Number.isFinite(period.end_index_exclusive)) {
       continue
@@ -840,6 +860,7 @@ const importData = async () => {
     const stopResult = await window.electronAPI.invoke('data:stop-collection')
     if (!stopResult.success) { alert('无法停止实时采集'); return }
     let previousBatchWarn = false
+    const peakCounter = new OfflinePeakCounter()
 
     // 创建流式读取器
     const streamReader = new CSVStreamReader(file, {
@@ -907,7 +928,20 @@ const importData = async () => {
           throw new Error(`第 ${batchIndex + 1} 批检测失败：${isTriangleResult.error || '服务无响应'}`)
         }
 
-        // 构造数据对象（峰值、最小、平均电压及峰峰值均使用绝对值后的数据计算）
+        const metricResults = isTriangleResult.metricResults
+        const peakHistory = peakCounter.addBatch(
+          data.length,
+          isTriangleResult.cycleMetrics || []
+        )
+        if (metricResults?.peak_stable_cycles) {
+          metricResults.peak_stable_cycles.value = peakHistory.count
+          metricResults.peak_stable_cycles.reference_peak_to_peak_raw =
+            peakHistory.reference ?? undefined
+        }
+        const peakStableSpans = peakHistory.currentBatchSpans
+        const suspectCycles = isTriangleResult.suspectCycles || []
+
+        // 原始采样幅值：不假定已换算成物理电压。
         const batchDataInfo: ChannelDataInfo = {
           peakVoltage: Math.max(...data),
           minimumVoltage: Math.min(...data),
@@ -922,7 +956,11 @@ const importData = async () => {
           err_pic_path_list: err_pic_path_list,
           err_data_list: err_data_list,
           defectPoints: defectPoints,
-          defectCycles: defectCycles
+          defectCycles: defectCycles,
+          metricResults,
+          peakStableSpans,
+          suspectCycles,
+          sampleRateHz: Number(metadata.sample_rate_hz) > 0 ? Number(metadata.sample_rate_hz) : undefined
         }
 
         if (isWarn && !previousBatchWarn) {
@@ -951,7 +989,9 @@ const importData = async () => {
               err_data_list: err_data_list,
               err_pic_path_list: err_pic_path_list,
               defectPoints: defectPoints,
-              defectCycles: defectCycles
+              defectCycles: defectCycles,
+              metricResults,
+              peakStableSpans
             }
           }
 
@@ -1108,14 +1148,14 @@ const getChartOption = () => {
           if (param.seriesName === '波形数据') {
             result += `
               <div>采样点: ${param.data[0]}</div>
-              <div>电压值: ${param.data[1].toFixed(4)}V</div>
+              <div>原始幅值: ${param.data[1].toFixed(4)}</div>
               <div>时间: ${((param.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
             `
           } else if (param.seriesName === '报警点') {
             result += `
               <div style="color: #FF4444; font-weight: bold; margin-top: 8px;">⚠️ 报警点</div>
               <div>采样点: ${param.data[0]}</div>
-              <div>电压值: ${param.data[1].toFixed(4)}V</div>
+              <div>原始幅值: ${param.data[1].toFixed(4)}</div>
               <div>时间: ${((param.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
             `
           }
@@ -1217,7 +1257,7 @@ const getChartOption = () => {
       type: 'value',
       min: yAxisRange.value.min,
       max: yAxisRange.value.max,
-      name: '电压 (V)',
+      name: '原始幅值',
       nameLocation: 'middle',
       nameGap: 40,
       axisLine: {
@@ -1231,7 +1271,7 @@ const getChartOption = () => {
       axisLabel: {
         color: '#666',
         fontSize: 11,
-        formatter: '{value}V'
+        formatter: '{value}'
       },
       splitLine: {
         show: true,
@@ -1330,7 +1370,7 @@ const getChartOption = () => {
                     <div style="padding: 8px;">
                       <div style="color: #FF4444; font-weight: bold;">⚠️ 缺陷点</div>
                       <div>采样点: ${params.data[0]}</div>
-                      <div>电压值: ${params.data[1].toFixed(4)}V</div>
+                      <div>原始幅值: ${params.data[1].toFixed(4)}</div>
                       <div>时间: ${((params.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
                     </div>
                   `

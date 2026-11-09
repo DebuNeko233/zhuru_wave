@@ -1,4 +1,4 @@
-import type { Point, DefectCycle } from '@main/type'
+import type { Point, DefectCycle, FourWaveMetrics, StablePeakSpan } from '@main/type'
 // 报警数据接口
 export interface AlarmData {
   id: string
@@ -28,6 +28,8 @@ export interface AlarmData {
     err_data_list?: [number, number][]
     defectPoints?: Point[]
     defectCycles?: DefectCycle[]
+    metricResults?: FourWaveMetrics
+    peakStableSpans?: StablePeakSpan[]
   }
 }
 

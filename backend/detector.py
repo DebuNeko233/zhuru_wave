@@ -112,8 +112,31 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
             zero_i = int(center_edges[np.argmax(slope_error[center_edges])] + 1)
         else:
             zero_i = int(np.argmin(np.abs(v - center)))
+        # Wrong-direction steps on otherwise monotonic flanks.  Exclude corners.
+        # A candidate is not yet an alarm; compare against inter-cycle noise below.
+        lo = max(2, int(len(v) * .06))
+        hi = min(len(v) - 2, int(len(v) * .94))
+        up_ids = np.arange(lo, max(lo, peak - 2), dtype=int)
+        down_ids = np.arange(min(peak + 2, hi), hi, dtype=int)
+        reversal_strength = 0.0
+        reversal_idx = None
+        if up_ids.size:
+            pos = int(up_ids[np.argmin(diffs[up_ids])])
+            if -diffs[pos] > reversal_strength:
+                reversal_strength, reversal_idx = float(-diffs[pos]), start + pos + 1
+        if down_ids.size:
+            pos = int(down_ids[np.argmax(diffs[down_ids])])
+            if diffs[pos] > reversal_strength:
+                reversal_strength, reversal_idx = float(diffs[pos]), start + pos + 1
+        reversal_strength = max(0.0, reversal_strength)
+        # Robustly estimate high-frequency deviations away from natural extrema.
+        flank_ids = np.r_[up_ids, down_ids]
+        flank_noise = np.diff(v)[flank_ids] - slope_ideal[flank_ids] if flank_ids.size else np.array([])
         cycles.append({'start': start, 'end': end,
                        'period_samples': end - start,
+                       'reversal_strength_raw': reversal_strength,
+                       'reversal_index': reversal_idx,
+                       'flank_noise': flank_noise,
                        'peak_to_peak_raw': amp,
                        'rise_slope_raw_per_sample': rise_slope,
                        'fall_slope_raw_per_sample': fall_slope,
@@ -151,6 +174,11 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
     sustained_flat = np.convolve(flat_flags.astype(int), np.ones(8, dtype=int), 'same') >= 5
     sustained_zero = np.convolve(zero_flags.astype(int), np.ones(8, dtype=int), 'same') >= 4
 
+    noise_values = np.concatenate([c['flank_noise'] for c in cycles if len(c['flank_noise'])])
+    _, noise_sigma = _median_mad(noise_values)
+    # Global MAD prevents tiny wiggles on a single otherwise quiet cycle
+    # from becoming an automatic alarm.
+    suspect_cycles = []
     bad = []
     for i, c in enumerate(cycles):
         amp_dev = abs(c['peak_to_peak_raw'] - center_amp) / (center_amp + 1e-9)
@@ -167,9 +195,23 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
             reasons.append('clipped_or_rounded_peak')
         if sustained_zero[i]:
             reasons.append('zero_crossing_step')
+        rev = c['reversal_strength_raw']
+        rev_floor = max(.012 * c['peak_to_peak_raw'], 1.8 * noise_sigma)
+        strong_rev = rev > max(.035 * c['peak_to_peak_raw'], 3.5 * noise_sigma)
+        if rev > rev_floor and c['reversal_index'] is not None:
+            suspect_cycles.append({
+                'start_index': c['start'], 'end_index_exclusive': c['end'] + 1,
+                'peak_index': c['reversal_index'],
+                'types': ['slope_reversal'],
+                'score': round(rev / (rev_floor + 1e-9), 3)
+            })
+        if strong_rev and 'slope_reversal' not in reasons:
+            reasons.append('slope_reversal')
         if reasons:
             # Amplitude/period faults are interval anomalies: no fabricated point.
-            if 'spike_or_step' in reasons:
+            if 'slope_reversal' in reasons:
+                marker, marker_kind = c['reversal_index'], 'slope_reversal'
+            elif 'spike_or_step' in reasons:
                 marker, marker_kind = c['kink_index'], 'spike_or_step'
             elif 'zero_crossing_step' in reasons:
                 marker, marker_kind = c['zero_index'], 'zero_crossing_step'
@@ -202,7 +244,7 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
     confirmed = []
     for e in events:
         shape = set(e['types']) & {
-            'nonlinear_slope', 'spike_or_step', 'clipped_or_rounded_peak', 'zero_crossing_step'}
+            'nonlinear_slope', 'spike_or_step', 'clipped_or_rounded_peak', 'zero_crossing_step', 'slope_reversal'}
         if (shape and (e['count'] >= max(3, min_bad_cycles) or e['score'] >= 2.6)) or \
            (not shape and e['count'] >= 6 and e['score'] >= 1.4):
             e.pop('top_score')
@@ -227,6 +269,76 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
         run = run + 1 if flag else 0
         longest = max(longest, run)
 
+    # Precise span for the longest run of complete peak-level cycles.  Indexes
+    # are relative to input wave, and runs do not bridge missing cycles.
+    stable_spans = []
+    run_start = None
+    run_end = None
+    run_count = 0
+    for i, (cycle, good) in enumerate(zip(cycles, target)):
+        is_adjacent = (run_end is not None and
+                       cycle['start'] - run_end <= max(2, .30 * period))
+        if good and run_count and not is_adjacent:
+            stable_spans.append({'start_index': run_start,
+                                 'end_index_exclusive': run_end + 1,
+                                 'cycle_count': run_count})
+            run_start, run_count = None, 0
+        if good:
+            if run_count == 0:
+                run_start = cycle['start']
+            run_count += 1
+            run_end = cycle['end']
+        elif run_count:
+            stable_spans.append({'start_index': run_start,
+                                 'end_index_exclusive': run_end + 1,
+                                 'cycle_count': run_count})
+            run_start, run_count = None, 0
+    if run_count:
+        stable_spans.append({'start_index': run_start,
+                             'end_index_exclusive': run_end + 1,
+                             'cycle_count': run_count})
+    stable_spans.sort(key=lambda item: item['cycle_count'], reverse=True)
+    longest = stable_spans[0]['cycle_count'] if stable_spans else 0
+
+    cycle_metrics = [{
+        'start_index': c['start'], 'end_index_exclusive': c['end'] + 1,
+        'peak_to_peak_raw': round(c['peak_to_peak_raw'], 5),
+        'period_samples': c['period_samples'],
+        'rise_slope_raw_per_sample': round(c['rise_slope_raw_per_sample'], 5),
+        'fall_slope_raw_per_sample': round(c['fall_slope_raw_per_sample'], 5),
+        'linearity_error': round(c['linearity_error'], 5)
+    } for c in cycles]
+    fault_types = set(t for ev in confirmed for t in ev['types'])
+    suspect_cycles = [c for c in suspect_cycles if not any(
+        c['start_index'] >= d['start_index'] and c['end_index_exclusive'] <= d['end_index_exclusive']
+        for d in confirmed_cycles)]
+    suspect_cycles = [c for c in suspect_cycles if not any(
+        c['start_index'] >= d['start_index'] and c['end_index_exclusive'] <= d['end_index_exclusive']
+        for d in confirmed_cycles)]
+    amp_issue = bool({'amplitude_drift'} & fault_types)
+    freq_issue = bool({'period_jitter'} & fault_types)
+    slope_issue = bool({'nonlinear_slope', 'spike_or_step',
+                        'clipped_or_rounded_peak', 'zero_crossing_step', 'slope_reversal'} & fault_types)
+    ref_status = lambda problem: 'ALERT' if problem else 'REFERENCE'
+    metric_results = {
+        'peak_to_peak': {
+            'value': round(float(np.median(amps)), 5), 'unit': 'raw',
+            'status': ref_status(amp_issue),
+            'variation_cv': round(float(np.std(amps) / (np.mean(amps)+1e-9)), 5)},
+        'frequency': {
+            'value': round(float(sample_rate_hz / np.median(periods)), 5) if sample_rate_hz else None,
+            'unit': 'Hz', 'status': ref_status(freq_issue) if sample_rate_hz else 'DATA_INSUFFICIENT',
+            'period_samples': round(float(np.median(periods)), 3),
+            'period_jitter_cv': round(float(np.std(periods) / np.mean(periods)), 5)},
+        'slope': {
+            'rise_value': round(float(np.median([c['rise_slope_raw_per_sample'] for c in cycles])), 5),
+            'fall_value': round(float(np.median([c['fall_slope_raw_per_sample'] for c in cycles])), 5),
+            'linearity_error': round(float(np.quantile(errors, .9)), 5),
+            'unit': 'raw/sample', 'status': ref_status(slope_issue)},
+        'peak_stable_cycles': {
+            'value': longest, 'unit': 'cycles', 'status': 'REFERENCE',
+            'reference_peak_to_peak_raw': round(ref, 5)}
+    }
     freq = float(sample_rate_hz / np.median(periods)) if sample_rate_hz else None
     return {
         'pass_flag': len(confirmed) == 0,
@@ -243,6 +355,10 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
             'peak_stable_cycle_count': longest,
             'total_cycles': len(cycles),
         },
+        'metric_results': metric_results,
+        'cycle_metrics': cycle_metrics,
+        'suspect_cycles': suspect_cycles,
+        'peak_stable_spans': stable_spans[:1],
         'thresholds': {'linearity_error': round(err_thr, 5), 'kink': round(kink_thr, 5), 'amplitude': round(amp_thr, 5)},
         'defects': confirmed,
         'defect_cycles': confirmed_cycles,
