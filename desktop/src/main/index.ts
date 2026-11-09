@@ -149,10 +149,6 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow?.maximize()
     mainWindow?.show()
-    // 在开发环境下自动打开开发者工具
-    if (process.env.NODE_ENV === 'development') {
-      mainWindow?.webContents.openDevTools()
-    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
