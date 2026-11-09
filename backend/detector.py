@@ -180,6 +180,18 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
            (not shape and e['count'] >= 6 and e['score'] >= 1.4):
             e.pop('top_score')
             confirmed.append(e)
+    # Return every individually flagged cycle that belongs to a confirmed event.
+    # The interval list is intentionally separate from grouped alarm events: the UI
+    # must highlight each abnormal period without painting the healthy gaps red.
+    confirmed_cycles = [
+        cycle for cycle in bad
+        if any(
+            event['start_index'] <= cycle['start_index']
+            and cycle['end_index_exclusive'] <= event['end_index_exclusive']
+            for event in confirmed
+        )
+    ]
+
     # Peak-level duration: number of consecutive periods near maximum stable amplitude.
     ref = float(np.percentile(amps, 90))
     target = np.abs(amps - ref) <= .05 * max(ref, 1e-9)
@@ -206,4 +218,5 @@ def analyze_wave(wave: list[float], *, sample_rate_hz: float | None = None,
         },
         'thresholds': {'linearity_error': round(err_thr, 5), 'kink': round(kink_thr, 5), 'amplitude': round(amp_thr, 5)},
         'defects': confirmed,
+        'defect_cycles': confirmed_cycles,
     }

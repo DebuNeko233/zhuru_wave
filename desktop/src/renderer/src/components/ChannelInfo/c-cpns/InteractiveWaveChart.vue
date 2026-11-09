@@ -321,7 +321,6 @@ const handleDrag = (offsetX: number) => {
   })
 
   updateSelectionArea()
-  updateDefectPointsSeries()
 }
 
 const getGridPx = () => {
@@ -356,54 +355,55 @@ const getGridPx = () => {
   }
 }
 
+// 用异常周期的半透明背景逐周期标注；选中区域与异常区间共用 markArea，
+// 避免游标拖动时覆盖掉异常标记。
+const getWaveMarkAreas = (total: number) => {
+  const marked: any[] = [
+    [
+      {
+        name: '选中区域',
+        xAxis: cursorIndex.value,
+        itemStyle: {
+          color: 'rgba(66, 133, 244, 0.08)',
+          borderColor: 'rgba(66, 133, 244, 0.25)',
+          borderWidth: 1
+        }
+      },
+      { xAxis: total - 1 }
+    ]
+  ]
+
+  for (const period of displayData.value?.defectCycles || []) {
+    if (!Number.isFinite(period.start_index) || !Number.isFinite(period.end_index_exclusive)) {
+      continue
+    }
+    const start = Math.max(0, Math.floor(period.start_index))
+    const end = Math.min(total, Math.ceil(period.end_index_exclusive))
+    if (start >= end) continue
+    marked.push([
+      {
+        xAxis: start,
+        itemStyle: {
+          color: 'rgba(255, 68, 68, 0.14)',
+          borderColor: 'rgba(255, 68, 68, 0.35)',
+          borderWidth: 1
+        }
+      },
+      { xAxis: end - 1 }
+    ])
+  }
+  return marked
+}
+
 const updateSelectionArea = () => {
   if (!chart || !hasData.value) return
-
-  const total = displayData.value!.showData.length
   chart.setOption({
     series: [
       {
-        markArea: {
-          silent: true,
-          data: [
-            [
-              {
-                name: '选中区域',
-                xAxis: cursorIndex.value,
-                itemStyle: {
-                  color: 'rgba(66, 133, 244, 0.08)',
-                  borderColor: 'rgba(66, 133, 244, 0.25)',
-                  borderWidth: 1
-                }
-              },
-              { xAxis: total - 1 }
-            ]
-          ]
-        }
+        name: '波形数据',
+        markArea: { silent: true, data: getWaveMarkAreas(displayData.value!.showData.length) }
       }
     ]
-  })
-}
-
-// 游标移动时实时更新缺陷点散点（只显示游标之后的点）
-const updateDefectPointsSeries = () => {
-  if (!chart || !hasData.value || !displayData.value?.defectPoints?.length) return
-
-  const showData = displayData.value.showData
-  const dataLength = showData.length
-
-  const filteredData = displayData.value.defectPoints
-    .filter((point) => point != null && point.x != null && Math.floor(point.x) >= cursorIndex.value)
-    .map((point) => {
-      const x = Math.max(0, Math.min(dataLength - 1, Math.floor(point.x)))
-      const y = showData[x]
-      if (typeof y !== 'number' || isNaN(y)) return null
-      return [x, y]
-    })
-    .filter((v) => v !== null) as number[][]
-
-  chart.setOption({
-    series: [{ name: '缺陷点', data: filteredData }]
   })
 }
 
@@ -857,7 +857,7 @@ const importData = async () => {
           `处理第 ${batchIndex + 1} 批数据: ${data.length} 个点, 进度: ${progress.toFixed(1)}%`
         )
         // console.log('data', data)
-        let isWarn, status, err_pic_path_list, err_data_list, defectPoints
+        let isWarn, status, err_pic_path_list, err_data_list, defectPoints, defectCycles
         // 进行判断
 
         let isTriangleResult = await window.electronAPI.invoke('data:isTriangle', {
@@ -881,6 +881,7 @@ const importData = async () => {
           err_pic_path_list = []
           err_data_list = []
           defectPoints = []
+          defectCycles = []
         } else if (isTriangleResult.success && !isTriangleResult.isTriangle) {
           status = '警告'
           isWarn = true
@@ -889,12 +890,19 @@ const importData = async () => {
           defectPoints = (isTriangleResult.defectPoints || []).map((pt: {x: number, y: number}) => ({
             x: pt.x, y: data[pt.x] ?? pt.y
           }))
+          defectCycles = (isTriangleResult.defectCycles || []).filter(
+            (cycle: { start_index: number; end_index_exclusive: number }) =>
+              Number.isFinite(cycle.start_index) && Number.isFinite(cycle.end_index_exclusive) &&
+              cycle.start_index >= 0 && cycle.end_index_exclusive <= data.length &&
+              cycle.start_index < cycle.end_index_exclusive
+          )
         } else {
           status = '检测服务错误'
           isWarn = false
           err_pic_path_list = []
           err_data_list = []
           defectPoints = []
+          defectCycles = []
           console.error('离线检测服务异常', isTriangleResult.error)
           throw new Error(`第 ${batchIndex + 1} 批检测失败：${isTriangleResult.error || '服务无响应'}`)
         }
@@ -913,7 +921,8 @@ const importData = async () => {
           isConnect: true,
           err_pic_path_list: err_pic_path_list,
           err_data_list: err_data_list,
-          defectPoints: defectPoints
+          defectPoints: defectPoints,
+          defectCycles: defectCycles
         }
 
         if (isWarn && !previousBatchWarn) {
@@ -941,7 +950,8 @@ const importData = async () => {
               },
               err_data_list: err_data_list,
               err_pic_path_list: err_pic_path_list,
-              defectPoints: defectPoints
+              defectPoints: defectPoints,
+              defectCycles: defectCycles
             }
           }
 
@@ -968,9 +978,9 @@ const importData = async () => {
         })
 
         if (isWarn) {
-          // 检测到缺陷时暂停 streamReader 2.3 秒
+          // 只短暂停留以便用户看到异常，不再等待 5 秒。检测仍然逐批执行。
           if (currentStreamReader.value) {
-            console.log('检测到缺陷，暂停数据读取 2.3 秒')
+            console.log('检测到缺陷，短暂停留后继续读取')
             currentStreamReader.value.pause()
 
             if (pauseTimeoutId.value) {
@@ -985,7 +995,7 @@ const importData = async () => {
                 currentStreamReader.value.resume()
               }
               pauseTimeoutId.value = null // 清除计时器ID
-            }, 5000)
+            }, 250)
           }
         }
       },
@@ -1257,20 +1267,7 @@ const getChartOption = () => {
           },
           markArea: {
             silent: true,
-            data: [
-              [
-                {
-                  name: '选中区域',
-                  xAxis: cursorIndex.value,
-                  itemStyle: {
-                    color: 'rgba(66, 133, 244, 0.08)',
-                    borderColor: 'rgba(66, 133, 244, 0.25)',
-                    borderWidth: 1
-                  }
-                },
-                { xAxis: dataLength > 0 ? dataLength - 1 : 0 }
-              ]
-            ]
+            data: getWaveMarkAreas(dataLength)
           }
         }
       ]
@@ -1282,11 +1279,11 @@ const getChartOption = () => {
 
         try {
           // 将 Point[] 转换为 ECharts 需要的 [x, y][]，y 使用当前波形在 x 位置的值
-          // 只保留索引游标之后（x >= cursorIndex）的缺陷点
+          // 显示所有异常周期的代表点，不随游标位置隐藏。
           processedAlarmData = displayData.value.defectPoints
             .filter(
               (point) =>
-                point != null && point.x != null && Math.floor(point.x) >= cursorIndex.value
+                point != null && point.x != null
             )
             .map((point) => {
               if (point == null || point.x == null || isNaN(point.x)) {
@@ -1394,7 +1391,7 @@ const updateChart = () => {
         console.error('更新图表失败:', error)
       }
     })
-  }, 50)
+  }, 16)
 }
 
 // 图表自适应
@@ -1620,8 +1617,7 @@ onMounted(async () => {
             const total = displayData.value!.showData.length
             cursorIndex.value = Math.round(Math.max(0, Math.min(total - 1, coord[0])))
             scheduleCursorReposition()
-            updateDefectPointsSeries()
-          }
+                    }
         })
       }
     }
@@ -1664,7 +1660,8 @@ const loadSnapshotData = (alarmData: AlarmFileData | Omit<AlarmData, 'id'>) => {
         isConnect: true,
         err_data_list: currentSnapInfo.err_data_list,
         err_pic_path_list: currentSnapInfo.err_pic_path_list,
-        defectPoints: currentSnapInfo.defectPoints
+        defectPoints: currentSnapInfo.defectPoints,
+        defectCycles: currentSnapInfo.defectCycles
       }
       snapshotData.value = currentDataInfo
       snapshotTime.value = alarmData.timestamp.toLocaleString() || new Date().toLocaleString()

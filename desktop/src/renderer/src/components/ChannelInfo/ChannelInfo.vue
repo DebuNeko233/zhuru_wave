@@ -129,6 +129,7 @@ const currentChannelData = computed(() => {
       err_data_list: alarmData.snapshotData.err_data_list,
       err_pic_path_list: alarmData.snapshotData.err_pic_path_list,
       defectPoints: alarmData.snapshotData.defectPoints,
+      defectCycles: alarmData.snapshotData.defectCycles,
       isConnect: true // 报警数据默认为已连接状态
     } as ChannelDataInfo
     return currentData

@@ -20,6 +20,14 @@ export interface YAxisRange {
   max: number
 }
 
+export interface DefectCycle {
+  start_index: number
+  end_index_exclusive: number
+  peak_index: number
+  types: string[]
+  score: number
+}
+
 export interface ChannelDataInfo {
   frequency?: number // 信号频率(Hz)，优先来自 native 频率接口
   peakVoltage: number // 最高峰值电压
@@ -36,6 +44,7 @@ export interface ChannelDataInfo {
   err_pic_path_list?: string[] // 报警图片地址
   err_data_list?: [number, number][] // 报警数据
   defectPoints?: Point[]
+  defectCycles?: DefectCycle[] // 已确认异常的逐周期区间（批次内采样索引）
 }
 
 export interface ProcessedDataResponse {

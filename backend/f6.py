@@ -25,7 +25,8 @@ def wave_check():
                               sample_rate_hz=opts.get('sample_rate_hz'),
                               sensitivity=float(opts.get('sensitivity', 1.0)))
         # Keep old front-end data names. Only true abnormal locations are returned.
-        points = [{str(e['peak_index']): e['score']} for e in result['defects']]
+        # One visible point per confirmed abnormal cycle (not one per grouped event).
+        points = [{str(c['peak_index']): c['score']} for c in result['defect_cycles']]
         return jsonify({'code': 200, 'msg': 'success', 'data': {
             **result, 'tubiandian_list': points,
             'err_data_list': [], 'err_pic_path_list': []}})

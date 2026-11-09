@@ -599,6 +599,7 @@ if (isMainThread) {
             err_pic_path_list: result_data.err_pic_path_list,
             err_data_list: result_data.err_data_list,
             defectPoints: flattenTubiandianList(result_data.tubiandian_list),
+            defectCycles: result_data.defect_cycles || [],
             defectTypes: [...new Set((result_data.defects || []).flatMap((d: {types: string[]}) => d.types))]
           }
         }

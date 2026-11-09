@@ -72,3 +72,27 @@ def test_lissajous_rejects_asynchronous_files():
     p = octagon()
     with pytest.raises(ValueError):
         analyze_lissajous(p[:, 0].tolist(), p[1:, 1].tolist(), synchronized=True)
+
+
+def test_confirmed_alarm_returns_every_flagged_cycle_as_separate_interval():
+    y = triangle()
+    for c in range(20, 35):
+        y[c * 50 + 12] += 1.2
+    result = analyze_wave(y.tolist())
+    assert result['status'] == 'FAIL'
+    assert len(result['defect_cycles']) >= 3
+    assert len(result['defect_cycles']) > len(result['defects'])
+    for cycle in result['defect_cycles']:
+        assert 0 <= cycle['start_index'] < cycle['peak_index'] < cycle['end_index_exclusive'] <= len(y)
+        assert cycle['types']
+        assert any(event['start_index'] <= cycle['start_index'] and
+                   cycle['end_index_exclusive'] <= event['end_index_exclusive']
+                   for event in result['defects'])
+    # All points are distinct and listed in chronological order.
+    assert [c['start_index'] for c in result['defect_cycles']] == sorted(
+        c['start_index'] for c in result['defect_cycles'])
+
+
+def test_clean_wave_returns_no_cycle_highlights():
+    result = analyze_wave(triangle().tolist())
+    assert result['defect_cycles'] == []
