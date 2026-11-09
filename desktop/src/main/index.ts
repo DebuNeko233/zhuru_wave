@@ -3,6 +3,7 @@ import { promises as fs, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import icon from '../../resources/img.ico?asset'
 import workerScriptPath from './data-worker?modulePath'
+import { checkNativeWaveFiles } from './native-loader'
 import { Worker, isMainThread } from 'worker_threads'
 import path from 'path'
 import { WaveCheckRequestOptions } from './type'
@@ -54,6 +55,7 @@ let isDeviceInitialized = false
 let isDataCollectionRunning = false
 // 数据采集 Worker
 let dataWorker: any = null
+let dataWorkerReadyPromise: Promise<void> | null = null
 let mainWindow: BrowserWindow | null = null
 let dataProvider: any = null
 
@@ -73,9 +75,44 @@ async function getDataWorker() {
     const libPath = app.isPackaged
       ? path.join(process.resourcesPath, 'native', 'libwave.dll')
       : path.join(__dirname, '../../src/native/libwave.dll')
+    // Fail immediately with the missing filename instead of a generic Win32 loader error.
+    checkNativeWaveFiles(libPath)
 
     dataWorker = new Worker(workerScriptPath, {
       workerData: { libPath }
+    })
+
+    const worker: Worker = dataWorker
+    // Wait until the native DLL and its dependencies are actually loaded.
+    // This turns a hidden worker initialization failure into an immediate IPC error.
+    dataWorkerReadyPromise = new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        cleanup()
+        reject(new Error('原生采集 DLL 初始化超时（8 秒）'))
+      }, 8000)
+      const onMessage = (message: any) => {
+        if (message.type === 'library-init-success') {
+          cleanup()
+          resolve()
+        } else if (message.type === 'library-init-error') {
+          cleanup()
+          reject(new Error(String(message.error || '原生采集 DLL 初始化失败')))
+        }
+      }
+      const onError = (error: Error) => { cleanup(); reject(error) }
+      const onExit = (code: number) => {
+        cleanup()
+        reject(new Error(`采集 Worker 初始化期间退出（${code}）`))
+      }
+      function cleanup() {
+        clearTimeout(timer)
+        worker.off('message', onMessage)
+        worker.off('error', onError)
+        worker.off('exit', onExit)
+      }
+      worker.on('message', onMessage)
+      worker.on('error', onError)
+      worker.on('exit', onExit)
     })
 
     // 监听 Worker 消息
@@ -90,7 +127,7 @@ async function getDataWorker() {
       if (mainWindow && !mainWindow.isDestroyed()) {
         if (message.type === 'data' && message.data) {
           mainWindow.webContents.send('data:update', message.data)
-        } else if (message.type === 'error') {
+        } else if (message.type === 'error' || message.type === 'library-init-error') {
           mainWindow.webContents.send('data:error', message.error)
         } else if (message.type === 'device-disconnected') {
           console.log('设备断开连接')
@@ -120,10 +157,23 @@ async function getDataWorker() {
 
     dataWorker.on('exit', (code: number, _: string) => {
       console.log(`🔚 数据采集 Worker 退出，退出码: ${code}`)
-      dataWorker = null
+      if (dataWorker === worker) {
+        dataWorker = null
+        dataWorkerReadyPromise = null
+      }
       isDataCollectionRunning = false
       isDeviceInitialized = false
     })
+  }
+  try {
+    await dataWorkerReadyPromise
+  } catch (error) {
+    const failed = dataWorker
+    dataWorker = null
+    dataWorkerReadyPromise = null
+    // Release the failed worker, then permit a clean retry after repair.
+    if (failed) await failed.terminate().catch(() => {})
+    throw error
   }
   return dataWorker
 }

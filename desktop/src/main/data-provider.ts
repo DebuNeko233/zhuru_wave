@@ -1,4 +1,5 @@
 import koffi from 'koffi'
+import { loadNativeWaveLibrary } from './native-loader'
 import path from 'path'
 import { isMainThread, workerData } from 'worker_threads'
 import { DeviceSettings } from './type'
@@ -48,7 +49,7 @@ class MainDataProvider {
 
       console.log('Loading library from main process:', libPath)
       console.log('__dirname:', __dirname) // 添加调试信息
-      this.lib = koffi.load(libPath)
+      this.lib = loadNativeWaveLibrary(koffi, libPath).lib
 
       // 定义函数签名
       this.InitDevice = this.lib.func('InitDevice', 'bool', [

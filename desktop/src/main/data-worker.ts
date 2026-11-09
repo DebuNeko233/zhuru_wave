@@ -5,6 +5,7 @@ import type { ProgramSettings, DeviceSettings } from './type'
 import { ChannelDataInfo, YAxisRange, ProcessedDataResponse } from './type'
 import { flattenTubiandianList } from './utils'
 import { mapDefectsToDisplay } from './defect-alignment'
+import { loadNativeWaveLibrary } from './native-loader'
 interface WorkerMessage {
   cmd:
     | 'start'
@@ -93,7 +94,7 @@ if (isMainThread) {
       }
 
       console.log('Worker: Loading library from:', libPath)
-      lib = koffi.load(libPath)
+      lib = loadNativeWaveLibrary(koffi, libPath).lib
 
       // 定义函数签名
       GetAllChannelData = lib.func('GetAllChannelData', 'int', [
@@ -129,6 +130,7 @@ if (isMainThread) {
   try {
     console.log('Worker: 启动时初始化库...')
     initWorkerLibrary()
+    parentPort?.postMessage({ type: 'library-init-success' })
   } catch (error) {
     console.error('Worker: 启动时库初始化失败:', error)
     // 发送错误消息到主进程
