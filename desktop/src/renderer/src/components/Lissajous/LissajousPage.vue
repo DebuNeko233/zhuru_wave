@@ -159,10 +159,11 @@ function render() {
       axisLine: { lineStyle: { color: '#9ba8b5' } }, splitLine: { lineStyle: { opacity: .12 } } },
     yAxis: { type: 'value', min: -1.3, max: 1.3, name: yChannel.value,
       axisLine: { lineStyle: { color: '#9ba8b5' } }, splitLine: { lineStyle: { opacity: .12 } } },
-    series: [{ name: 'XY 轨迹', type: 'line', data: pts,
-      showSymbol: false, symbol: 'none', animation: false,
-      lineStyle: { width: 1.2, color: '#00a4df', opacity: .72 },
-      silent: true, connectNulls: false }]
+    // 纯散点：各个同步采样对 (X[i], Y[i]) 独立显示，不连线。
+    series: [{ name: 'XY 采样点', type: 'scatter', data: pts,
+      symbol: 'circle', symbolSize: 2.5, animation: false,
+      itemStyle: { color: '#00a4df', opacity: .82 },
+      silent: true, progressive: 2000, progressiveThreshold: 3000 }]
   }, true)
 }
 
