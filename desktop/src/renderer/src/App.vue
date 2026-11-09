@@ -30,8 +30,7 @@ onMounted(async () => {
 
   try {
     await channelDataStore.initializeAndStart()
-    // 加载默认数据
-    await channelDataStore.loadDefaultData()
+    // 不在启动时自动导入 analyze 目录的演示数据，以免覆盖实时采集结果。
 
     console.log('App: 数据采集系统初始化完成')
   } catch (error) {
