@@ -1149,14 +1149,14 @@ const getChartOption = () => {
             result += `
               <div>采样点: ${param.data[0]}</div>
               <div>原始幅值: ${param.data[1].toFixed(4)}</div>
-              <div>时间: ${((param.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
+              ${getSampleTimeHtml(param.data[0])}
             `
           } else if (param.seriesName === '报警点') {
             result += `
               <div style="color: #FF4444; font-weight: bold; margin-top: 8px;">⚠️ 报警点</div>
               <div>采样点: ${param.data[0]}</div>
               <div>原始幅值: ${param.data[1].toFixed(4)}</div>
-              <div>时间: ${((param.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
+              ${getSampleTimeHtml(param.data[0])}
             `
           }
         })
@@ -1371,7 +1371,7 @@ const getChartOption = () => {
                       <div style="color: #FF4444; font-weight: bold;">⚠️ 缺陷点</div>
                       <div>采样点: ${params.data[0]}</div>
                       <div>原始幅值: ${params.data[1].toFixed(4)}</div>
-                      <div>时间: ${((params.data[0] / channelDataStore.sampleRate) * 1000).toFixed(2)}ms</div>
+                      ${getSampleTimeHtml(params.data[0])}
                     </div>
                   `
                 }
@@ -1402,9 +1402,42 @@ const getChartOption = () => {
         console.log('没有报警点数据需要处理')
       }
 
+
+      // 仅候选的局部回折使用琥珀色标记，不作为确认报警红点。
+      const suspectPoints = (displayData.value?.suspectCycles || [])
+        .filter((c) => c.peak_index != null && Number.isFinite(c.peak_index))
+        .map((c) => {
+          const x = Math.floor(c.peak_index!)
+          const y = displayData.value?.showData?.[x]
+          return x >= 0 && x < dataLength && typeof y === 'number'
+            ? [x, y] : null
+        })
+        .filter((p) => p !== null) as number[][]
+      if (suspectPoints.length) {
+        series.push({
+          name: '斜率回折候选',
+          type: 'scatter',
+          data: suspectPoints,
+          symbol: 'circle',
+          symbolSize: 5,
+          itemStyle: { color: '#E49B2A' },
+          tooltip: { formatter: (params: any) =>
+            `候选回折 · 采样点 ${params.data[0]}` },
+          z: 95
+        } as any)
+      }
+
       return series
     })()
   }
+}
+
+// 只有 CSV 元数据提供了真实采样率，才展示相对采样时间。
+const getSampleTimeHtml = (index: number): string => {
+  const rate = displayData.value?.sampleRateHz
+  return typeof rate === 'number' && Number.isFinite(rate) && rate > 0
+    ? `<div>时间: ${((index / rate) * 1000).toFixed(3)}ms</div>`
+    : ''
 }
 
 // 更新图表
