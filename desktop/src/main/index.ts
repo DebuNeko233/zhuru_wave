@@ -2,9 +2,9 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { promises as fs, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import icon from '../../resources/img.ico?asset'
-import workerScriptPath from './data-worker?modulePath'
+import { AcquisitionProcess } from './acquisition-process'
 import { checkNativeWaveFiles } from './native-loader'
-import { Worker, isMainThread } from 'worker_threads'
+import { isMainThread } from 'worker_threads'
 import path from 'path'
 import { WaveCheckRequestOptions } from './type'
 import { apiService, getRequest, postRequest } from './api'
@@ -56,6 +56,7 @@ let isDataCollectionRunning = false
 // 数据采集 Worker
 let dataWorker: any = null
 let dataWorkerReadyPromise: Promise<void> | null = null
+let acquisitionNativeCrash = false
 let mainWindow: BrowserWindow | null = null
 let dataProvider: any = null
 
@@ -71,18 +72,16 @@ async function getMainDataProvider() {
 
 async function getDataWorker() {
   if (!dataWorker) {
-    // 使用 electron-vite 的独立 Worker 入口，避免在线程中重新执行 Electron 主进程。
+    // 厂商 DLL 在单独的 OS 工具进程中运行，不共享 Electron 主进程地址空间。
     const libPath = app.isPackaged
       ? path.join(process.resourcesPath, 'native', 'libwave.dll')
       : path.join(__dirname, '../../src/native/libwave.dll')
     // Fail immediately with the missing filename instead of a generic Win32 loader error.
     checkNativeWaveFiles(libPath)
 
-    dataWorker = new Worker(workerScriptPath, {
-      workerData: { libPath }
-    })
+    dataWorker = new AcquisitionProcess(libPath)
 
-    const worker: Worker = dataWorker
+    const worker: AcquisitionProcess = dataWorker
     // Wait until the native DLL and its dependencies are actually loaded.
     // This turns a hidden worker initialization failure into an immediate IPC error.
     dataWorkerReadyPromise = new Promise<void>((resolve, reject) => {
@@ -155,8 +154,13 @@ async function getDataWorker() {
       }
     })
 
-    dataWorker.on('exit', (code: number, _: string) => {
-      console.log(`🔚 数据采集 Worker 退出，退出码: ${code}`)
+    dataWorker.on('exit', (code: number) => {
+      console.error(`🔚 采集子进程退出，代码: ${code} (0x${(code >>> 0).toString(16)})`)
+      if (code !== 0 && dataWorker === worker) acquisitionNativeCrash = true
+      if (code !== 0 && dataWorker === worker && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('data:error',
+          `采集进程异常退出 (0x${(code >>> 0).toString(16)})，可能是厂商 DLL / USB 驱动发生原生崩溃；已暂停自动重连。`)
+      }
       if (dataWorker === worker) {
         dataWorker = null
         dataWorkerReadyPromise = null
@@ -514,6 +518,9 @@ if (isMainThread) {
   })
 
   ipcMain.handle('data:start-device-polling', async (_, options) => {
+    if (acquisitionNativeCrash) {
+      return { success: false, error: '采集子进程异常退出，自动轮询已暂停；请检查设备后手动重连' }
+    }
     console.log('收到启动设备轮询请求: 所获取参数', options)
 
     try {
@@ -982,6 +989,8 @@ if (isMainThread) {
   // })
 
   ipcMain.handle('data:initialize-device', async (_, options) => {
+    // Explicit initialization permits a retry after a previous native crash.
+    acquisitionNativeCrash = false
     try {
       // 创建或重用 Worker
       await getDataWorker()
@@ -1041,6 +1050,7 @@ if (isMainThread) {
 
   // 重新创建 Worker 并初始化设备的处理器
   ipcMain.handle('data:reinitialize-device-with-new-worker', async (_, options) => {
+    acquisitionNativeCrash = false
     try {
       // 先终止现有的 Worker 以确保状态同步
       if (dataWorker) {

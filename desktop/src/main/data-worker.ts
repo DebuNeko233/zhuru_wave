@@ -1,4 +1,4 @@
-import { Worker, isMainThread, parentPort, WorkerOptions, workerData } from 'worker_threads'
+import { Worker, isMainThread, parentPort as threadParentPort, WorkerOptions, workerData } from 'worker_threads'
 import path from 'path'
 import { apiService } from './api'
 import type { ProgramSettings, DeviceSettings } from './type'
@@ -25,10 +25,26 @@ interface WorkerMessage {
   }
 }
 
+// Electron utilityProcess communicates via process.parentPort, not worker_threads.
+// Keep the existing message protocol for both environments.
+interface UtilityParentPort {
+  postMessage(message: unknown): void
+  on(event: 'message', listener: (event: { data: any }) => void): void
+}
+const utilityParentPort = (process as unknown as { parentPort?: UtilityParentPort }).parentPort
+const parentPort = utilityParentPort
+  ? ({
+      postMessage: (message: unknown) => utilityParentPort.postMessage(message),
+      on: (_event: 'message', listener: (message: any) => void) => {
+        utilityParentPort.on('message', (event) => listener(event.data))
+      }
+    } as unknown as NonNullable<typeof threadParentPort>)
+  : threadParentPort
+
 // 在条件块外部声明函数
 let createDataWorker: (options: WorkerOptions) => Worker
 
-if (isMainThread) {
+if (isMainThread && !utilityParentPort) {
   createDataWorker = function (options: WorkerOptions): Worker {
     // 动态导入 electron，确保只在主线程中执行
     const electron = require('electron')
@@ -79,7 +95,7 @@ if (isMainThread) {
   let debug_single = false
   let period_step = 2
   let rate = 0.9
-  let debugImgPath = path.join(process.resourcesPath, '../debugImg')
+  let debugImgPath = path.join(process.resourcesPath || process.cwd(), '../debugImg')
   let step1 = 2
   let step2 = 2
 
@@ -88,7 +104,8 @@ if (isMainThread) {
     if (isLibInitialized) return
 
     try {
-      const libPath = workerData?.libPath
+      const libPath = workerData?.libPath ||
+        process.argv.find(arg => arg.startsWith('--wave-lib-path='))?.slice('--wave-lib-path='.length)
       if (!libPath) {
         throw new Error('Library path not provided in workerData')
       }

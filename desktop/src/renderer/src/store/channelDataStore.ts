@@ -646,6 +646,11 @@ export const useChannelDataStore = defineStore('channelData', () => {
     })
 
     window.electron.ipcRenderer.on('data:error', (_, error) => {
+      // A native SDK crash is not a waveform fault. Keep the UI in offline mode.
+      if (typeof error === 'string' && error.includes('采集进程异常退出')) {
+        deviceInit.value = false
+        paramentSetting.programSettings.realTimeMode = false
+      }
       ElMessage({
         message: `进程数据错误,${error}`,
         type: 'error'

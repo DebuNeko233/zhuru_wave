@@ -19,7 +19,8 @@
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
-    "test:native-pack": "node --test tests/after-pack.test.cjs"
+    "test:native-pack": "node --test tests/after-pack.test.cjs",
+    "test:acquisition": "node --test tests/acquisition-isolation.test.cjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

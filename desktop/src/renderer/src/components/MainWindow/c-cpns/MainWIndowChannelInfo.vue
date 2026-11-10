@@ -9,6 +9,14 @@
         :icon="OverloadIcon"
       />
 
+      <el-button
+        v-if="!channelDataStore.deviceInit"
+        size="small"
+        plain
+        :loading="reconnecting"
+        @click="reconnectDevice"
+      >连接采集</el-button>
+
       <EnergyLevelControl @open-config-dialog="handleOpenConfigDialog"> </EnergyLevelControl>
 
       
@@ -53,6 +61,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 import InfoCard from './InfoCard.vue'
 import RuntimeIcon from '@renderer/assets/iconComponents/RuntimeIcon.vue'
@@ -65,6 +74,17 @@ import EnergyLevelControl from './EnergyLevelControl.vue'
 import DualInfoCard from './DualInfoCard.vue'
 
 const channelDataStore = useChannelDataStore()
+const reconnecting = ref(false)
+const reconnectDevice = async () => {
+  if (reconnecting.value) return
+  reconnecting.value = true
+  try {
+    const ok = await channelDataStore.initializeAndStart()
+    if (!ok) ElMessage.warning('采集设备初始化失败，请检查驱动和设备连接')
+  } finally {
+    reconnecting.value = false
+  }
+}
 const alarmDataStore = useAlarmDataStore()
 
 // 响应式数据
