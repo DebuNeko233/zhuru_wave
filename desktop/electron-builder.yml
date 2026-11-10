@@ -13,6 +13,9 @@ extraResources:
   - from: 'src/native'
     to: 'native'
     filter: ['**/*']
+# Stage and verify all five vendor DLLs in win-unpacked/resources/native.
+# Fail the build if any required source binary is unavailable.
+afterPack: ./build/afterPack.cjs
 asarUnpack:
   # 仅解包 Node 原生扩展；设备 DLL 经 extraResources 放在 resources/native。
   - '**/*.node'
